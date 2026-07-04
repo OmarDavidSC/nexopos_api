@@ -5,13 +5,16 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class PublicationImages extends Model
+class Unit extends Model
 {
+
     use SoftDeletes;
-    protected $table = 'publication_images';
+    protected $table = 'units';
     protected $fillable = [
         'id',
-        'publication_id',
-        'image_id',
+        'company_id',
+        'name',
+        'abbreviation',
+        'status',
     ];
 }
