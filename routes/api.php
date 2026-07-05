@@ -13,4 +13,9 @@ $map->attach('api.', '/api', function ($map) {
     include __DIR__ . "/api/MeetingRoute.php";
     include __DIR__ . "/api/S3AwsRoute.php";
     include __DIR__ . "/api/ProfileRoute.php";
+
+    //nexopos
+    include __DIR__ . "/api/BrandRoute.php";
+    include __DIR__ . "/api/CategoryRoute.php";
+    include __DIR__ . "/api/UnitRoute.php";
 });

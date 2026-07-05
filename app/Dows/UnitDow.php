@@ -3,11 +3,11 @@
 namespace App\Dows;
 
 use App\Middlewares\Application;
-use App\Models\Category;
+use App\Models\Unit;
 use Illuminate\Database\Capsule\Manager as DB;
 use App\Utilities\FG;
 
-class CategoryDow
+class UnitDow
 {
 
     public function index($request)
@@ -23,18 +23,18 @@ class CategoryDow
 
             $company_id = Application::getItem('company_id');
 
-            $query = Category::where('company_id', $company_id)
+            $query = Unit::where('company_id', $company_id)
                 ->whereNull('deleted_at')
                 ->orderBy('id', 'desc');
 
             $total = $query->count();
 
-            $categories = $query
+            $units = $query
                 ->skip(($page - 1) * $perPage)
                 ->take($perPage)
                 ->get();
 
-            $data = $categories->map(function ($item) {
+            $data = $units->map(function ($item) {
                 return [
                     'id' => $item->id,
                     'name' => $item->name,
@@ -68,12 +68,12 @@ class CategoryDow
 
             $company_id = Application::getItem('company_id');
 
-            $categories = Category::where('company_id', $company_id)
+            $units = Unit::where('company_id', $company_id)
                 ->whereNull('deleted_at')
                 ->orderBy('name', 'asc')
                 ->get();
 
-            $categories = $categories->map(function ($item) {
+            $units = $units->map(function ($item) {
                 return [
                     'id' => $item->id,
                     'name' => $item->name,
@@ -81,7 +81,7 @@ class CategoryDow
             });
 
             $response['success'] = true;
-            $response['data'] = $categories;
+            $response['data'] = $units;
             $response['message'] = 'adm sucessfully';
         } catch (\Exception $e) {
             $response['message'] = $e->getMessage();
@@ -97,6 +97,7 @@ class CategoryDow
             $user_id = Application::getItem('user_id');
 
             $name = trim($input['name']);
+            $abbreviation = trim($input['abbreviation']);
             $company_id = Application::getItem('company_id');
 
             if (empty($name)) {
@@ -105,15 +106,22 @@ class CategoryDow
                 return $response;
             }
 
-            $category = new Category();
-            $category->name = $name;
-            $category->company_id = $company_id;
-            $category->status = 1;
-            $category->save();
+            if (empty($abbreviation)) {
+                $response['success'] = false;
+                $response['message'] = "Abreviatura es campo obligatorio";
+                return $response;
+            }
+
+            $unit = new Unit();
+            $unit->name = $name;
+            $unit->abbreviation = $abbreviation;
+            $unit->company_id = $company_id;
+            $unit->status = 1;
+            $unit->save();
 
             $response['success'] = true;
-            $response['data'] = $category;
-            $response['message'] = 'Categoria registrada correctamete.';
+            $response['data'] = $unit;
+            $response['message'] = 'Tipo de unidad registrada correctamente.';
         } catch (\Exception $e) {
             $response['message'] = $e->getMessage();
         }
@@ -128,10 +136,10 @@ class CategoryDow
             $input = $request->getParsedBody();
             $user_id = Application::getItem('user_id');
 
-            $category = Category::find($id);
-            if (!$category) {
+            $unit = Unit::find($id);
+            if (!$unit) {
                 $response['success'] = false;
-                $response['message'] = "Categoria no fue encontrada.";
+                $response['message'] = "Tipo de unidad no fue encontrada.";
                 return $response;
             }
 
@@ -141,12 +149,19 @@ class CategoryDow
                 return $response;
             }
 
-            $category->name = $input['name'];
-            $category->save();
+            if (empty($input['abbreviation'])) {
+                $response['success'] = false;
+                $response['message'] = "Campo abreviatura es obligatorio.";
+                return $response;
+            }
+
+            $unit->name = $input['name'];
+            $unit->abbreviation = $input['abbreviation'];
+            $unit->save();
 
             $response['success'] = true;
-            $response['data'] = $category;
-            $response['message'] = "Categoria actualizada correctamente.";
+            $response['data'] = $unit;
+            $response['message'] = "Tipo de unidad actualizado correctamente.";
         } catch (\Exception $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
@@ -160,19 +175,19 @@ class CategoryDow
         try {
             $id = $request->getAttribute('id');
 
-            $category = Category::find($id);
-            if (!$category) {
+            $unit = Unit::find($id);
+            if (!$unit) {
                 $response['success'] = false;
-                $response['message'] = "Categoria no fue encontrada.";
+                $response['message'] = "Tipo de unidad no fue encontrada.";
                 return $response;
             }
 
-            $category->deleted_at = FG::getDateHour();
-            $category->save();
+            $unit->deleted_at = FG::getDateHour();
+            $unit->save();
 
             $response['success'] = true;
-            $response['data'] = $category;
-            $response['message'] = "Categoria eliminada correctamente.";
+            $response['data'] = $unit;
+            $response['message'] = "Tipo de unidad eliminada correctamente.";
         } catch (\Exception $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
