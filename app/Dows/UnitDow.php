@@ -38,6 +38,7 @@ class UnitDow
                 return [
                     'id' => $item->id,
                     'name' => $item->name,
+                    'abbreviation' => $item->abbreviation,
                     'status' => $item->status == 1 ? 'Activo' : 'Inactivo',
                     'datecreated_label' => FG::formatDateTimeHuman($item->created_at),
                     'dateupdated_label' => FG::formatDateTimeHuman($item->updated_at),
