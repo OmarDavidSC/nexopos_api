@@ -56,7 +56,6 @@ class CategoryDow
         } catch (\Exception $e) {
             $response['message'] = $e->getMessage();
         }
-
         return $response;
     }
 

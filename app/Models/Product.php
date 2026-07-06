@@ -16,7 +16,6 @@ class Product extends Model
         'category_id',
         'brand_id',
         'unit_id',
-        'image_id',
         'code',
         'barcode',
         'name',
@@ -27,4 +26,17 @@ class Product extends Model
         'current_stock',
         'status',
     ];
+
+    public function category()
+    {
+        return $this->belongsTo(Category::class, 'category_id', 'id');
+    }
+
+    public function brand(){
+        return $this->belongsTo(Brand::class, 'brand_id', 'id');
+    }
+
+    public function unit(){
+        return $this->belongsTo(Unit::class, 'unit_id', 'id');
+    }
 }
