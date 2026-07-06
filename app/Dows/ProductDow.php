@@ -15,21 +15,47 @@ class ProductDow
         $response = FG::responseDefault();
 
         try {
+
             $input = $request->getParsedBody();
             $company_id = Application::getItem('company_id');
 
             $page = isset($input['page']) ? (int)$input['page'] : 1;
             $perPage = 10;
 
-            $query = Product::with([
-                'category:id,name',
-                'brand:id,name',
-                'unit:id,name,abbreviation'
-            ])
-                ->where('company_id', $company_id)
-                ->whereNull('deleted_at')
-                ->orderBy('id', 'desc');
+            $search = trim($input['search'] ?? '');
+            $category_id = $input['category_id'] ?? null;
+            $brand_id = $input['brand_id'] ?? null;
+            $status = $input['status'] ?? '';
 
+            $query = Product::with(['category:id,name', 'brand:id,name', 'unit:id,name,abbreviation'])
+                ->where('company_id', $company_id)
+                ->whereNull('deleted_at');
+
+            // busqueda
+            if (!empty($search)) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'LIKE', "%{$search}%")
+                        ->orWhere('code', 'LIKE', "%{$search}%")
+                        ->orWhere('barcode', 'LIKE', "%{$search}%");
+                });
+            }
+
+            // Filtro categoria
+            if (!empty($category_id)) {
+                $query->where('category_id', $category_id);
+            }
+
+            // Filtro marca 
+            if (!empty($brand_id)) {
+                $query->where('brand_id', $brand_id);
+            }
+
+            // Filtrar estado
+            if ($status !== '') {
+                $query->where('status', $status);
+            }
+
+            $query->orderBy('id', 'desc');
             $total = $query->count();
 
             $products = $query
@@ -38,9 +64,22 @@ class ProductDow
                 ->get();
 
             $data = $products->map(function ($item) {
+                // Estado del stock
+                if ($item->current_stock <= 0) {
+                    $stock_status = 'Agotado';
+                    $stock_color = 'danger';
+                } elseif ($item->current_stock <= $item->minimum_stock) {
+                    $stock_status = 'Stock Bajo';
+                    $stock_color = 'warning';
+                } else {
+                    $stock_status = 'Disponible';
+                    $stock_color = 'success';
+                }
+
                 return [
                     'id' => $item->id,
                     'code' => $item->code,
+                    'barcode' => $item->barcode,
                     'name' => $item->name,
                     'category_id' => $item->category_id,
                     'category' => $item->category?->name,
@@ -52,21 +91,28 @@ class ProductDow
                     'sale_price' => $item->sale_price,
                     'current_stock' => $item->current_stock,
                     'minimum_stock' => $item->minimum_stock,
-                    'status' => $item->status == 1 ? 'Activo' : 'Inactivo',
+                    'stock_status' => $stock_status,
+                    'stock_color' => $stock_color,
+                    'status' => $item->status,
+                    'status_label' => $item->status == 1 ? 'Activo' : 'Inactivo',
                     'datecreated_label' => FG::formatDateTimeHuman($item->created_at),
                     'dateupdated_label' => FG::formatDateTimeHuman($item->updated_at),
                 ];
             });
 
+            $summary = $this->getSummary($company_id);
+
             $response['success'] = true;
             $response['data'] = [
+                'summary' => $summary,
                 'page' => $page,
                 'per_page' => $perPage,
                 'total' => $total,
                 'total_pages' => ceil($total / $perPage),
                 'data' => $data
             ];
-            $response['message'] = 'successully';
+
+            $response['message'] = 'successfully';
         } catch (\Exception $e) {
             $response['message'] = $e->getMessage();
         }
@@ -161,8 +207,12 @@ class ProductDow
             $id = $request->getAttribute('id');
             $input = $request->getParsedBody();
             $user_id = Application::getItem('user_id');
+            $company_id = Application::getItem('company_id');
 
-            $product = Product::find($id);
+            $product = Product::where('company_id', $company_id)
+                ->where('id', $id)
+                ->first();
+
             if (!$product) {
                 $response['success'] = false;
                 $response['message'] = "Producto no fue encontrado.";
@@ -209,8 +259,11 @@ class ProductDow
         $response = FG::responseDefault();
         try {
             $id = $request->getAttribute('id');
+            $company_id = Application::getItem('company_id');
 
-            $product = Product::find($id);
+            $product = Product::where('company_id', $company_id)
+                ->where('id', $id)
+                ->first();
             if (!$product) {
                 $response['success'] = false;
                 $response['message'] = "Producto no fue encontrado.";
@@ -228,5 +281,26 @@ class ProductDow
             $response['message'] = $e->getMessage();
         }
         return $response;
+    }
+
+    private function getSummary(int $company_id): array
+    {
+        $products = Product::where('company_id', $company_id)
+            ->whereNull('deleted_at')
+            ->get([
+                'status',
+                'current_stock',
+                'minimum_stock'
+            ]);
+
+        return [
+            'total_products' => $products->count(),
+            'active_productos' => $products->where('status', 1)->count(),
+            'low_stock' => $products->filter(function ($item) {
+                return $item->current_stock > 0 &&
+                    $item->current_stock <= $item->minimum_stock;
+            })->count(),
+            'out_stock' => $products->where('current_stock', '<=', 0)->count()
+        ];
     }
 }
