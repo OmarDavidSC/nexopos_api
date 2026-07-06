@@ -1,6 +1,6 @@
 <?php
 
-$map->attach('units.', 'unit', function ($map) {
+$map->attach('units.', '/unit', function ($map) {
 
     $map->post('index', '', [
         'Controller' => 'App\Controllers\UnitController',
