@@ -3,7 +3,6 @@
 namespace App\Dows;
 
 use App\Middlewares\Application;
-use App\Models\InventoryMovements;
 use App\Models\Product;
 use App\Models\Purchase;
 use App\Models\PurchaseDetail;
