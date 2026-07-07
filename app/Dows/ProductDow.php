@@ -169,7 +169,7 @@ class ProductDow
             $current_stock = trim($input['current_stock']);
 
             //validacion de campos obligatorios
-            if (empty($name) || empty($category_id) || empty($brand_id) || empty($unit_id) || empty($purchase_price) || empty($sale_price)) {
+            if (empty($name) || empty($category_id) || empty($brand_id) || empty($purchase_price) || empty($sale_price)) {
                 $response['success'] = false;
                 $response['message'] = "Campos obligatorios incompletos.";
                 return $response;
@@ -181,9 +181,9 @@ class ProductDow
             $product->brand_id = $brand_id;
             $product->unit_id = $unit_id;
             $product->code = $code;
-            $product->barcode = $bar_code;
+            // $product->barcode = $bar_code;
             $product->name = $name;
-            $product->description = $description;
+            // $product->description = $description;
             $product->purchase_price = $purchase_price;
             $product->sale_price = $sale_price;
             $product->minimum_stock = $minimum_stock;
