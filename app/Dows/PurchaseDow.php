@@ -357,22 +357,6 @@ class PurchaseDow
         $product->save();
     }
 
-    private function createInventoryMovement(int $company_id, int $user_id, Purchase $purchase, Product $product, $quantity, $stock_before)
-    {
-        $movement = new InventoryMovements();
-        $movement->company_id = $company_id;
-        $movement->product_id = $product->id;
-        $movement->user_id = $user_id;
-        $movement->type = 'PURCHASE';
-        $movement->quantity = $quantity;
-        $movement->stock_before = $stock_before;
-        $movement->stock_after = $product->current_stock;
-        $movement->reference_type = 'PURCHASE';
-        $movement->reference_id = $purchase->id;
-        $movement->observation = 'Ingreso por compra';
-        $movement->save();
-    }
-
     private function reversePurchaseDetail(Purchase $purchase, PurchaseDetail $detail, int $company_id, int $user_id)
     {
 
