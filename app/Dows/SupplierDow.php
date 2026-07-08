@@ -82,6 +82,7 @@ class SupplierDow
                 return [
                     'id' => $item->id,
                     'business_name' => $item->business_name,
+                    'document_number' => $item->document_number,
                 ];
             });
 

@@ -16,41 +16,48 @@ class PurchaseDow
     public function index($request)
     {
         $response = FG::responseDefault();
-
         try {
-
             $input = $request->getParsedBody();
             $company_id = Application::getItem('company_id');
-
             $page = isset($input['page']) ? (int)$input['page'] : 1;
             $perPage = 10;
 
             $search = trim($input['search'] ?? '');
-            $supplier_id = isset($input['supplier_id']) ? (int)$input['supplier_id'] : null;
+            $supplier_id = isset($input['supplier_id']) && $input['supplier_id'] !== ''
+                ? (int)$input['supplier_id']
+                : null;
             $status = $input['status'] ?? '';
 
-            $query = Purchase::with(['supplier:id, business_name'])
+            $query = Purchase::with([
+                'supplier:id,business_name',
+                'user:id,name'
+            ])
+                ->withCount('details')
                 ->where('company_id', $company_id)
                 ->whereNull('deleted_at');
 
-            //buscar por documento
+            // Buscar
             if (!empty($search)) {
                 $query->where(function ($q) use ($search) {
-                    $q->where('document_number', 'LIKE', "%{$search}%")
-                        ->orWhere('document_type', 'LIKE', "%{$search}%");
+                    $q->where('voucher_series', 'LIKE', "%{$search}%")
+                        ->orWhere('voucher_number', 'LIKE', "%{$search}%")
+                        ->orWhereHas('supplier', function ($supplier) use ($search) {
+                            $supplier->where('business_name', 'LIKE', "%{$search}%");
+                        });
                 });
             }
 
-            //filtro por proveedor
+            //Proveedor
             if (!empty($supplier_id)) {
                 $query->where('supplier_id', $supplier_id);
             }
 
+            //Estado
             if ($status !== '') {
                 $query->where('status', $status);
             }
 
-            $query->orderBy('id', 'desc');
+            $query->orderBy('id', 'DESC');
             $total = $query->count();
 
             $purchases = $query
@@ -59,26 +66,30 @@ class PurchaseDow
                 ->get();
 
             $data = $purchases->map(function ($item) {
-
                 return [
                     'id' => $item->id,
                     'supplier_id' => $item->supplier_id,
                     'supplier' => $item->supplier?->business_name,
-                    'document_type' => $item->document_type,
-                    'document_number' => $item->document_number,
-                    'purchase_date' => $item->purchase_date,
-                    'subtotal' => $item->subtotal,
-                    'tax' => $item->tax,
-                    'total' => $item->total,
+                    'user' => $item->user?->name,
+                    'purchase_date' => FG::formatDateTimeHuman($item->purchase_date),
+                    'voucher_type' => $item->voucher_type,
+                    'voucher_series' => $item->voucher_series,
+                    'voucher_number' => $item->voucher_number,
+                    'voucher' => trim($item->voucher_type . ' ' . $item->voucher_series . '-' . $item->voucher_number),
+                    'subtotal' => (float)$item->subtotal,
+                    'tax' => (float)$item->tax,
+                    'discount' => (float)$item->discount,
+                    'total' => (float)$item->total,
+                    'items_count' => $item->details_count,
                     'status' => $item->status,
-                    'status_label' => $item->status,
-                    'datecreated_label' => FG::formatDateTimeHuman($item->created_at),
-                    'dateupdated_label' => FG::formatDateTimeHuman($item->updated_at),
-
+                    'status_label' => FG::getStatusLabel($item->status),
+                    'observation' => $item->observation,
+                    // 'datecreated_label' => FG::formatDateTimeHuman($item->created_at),
+                    // 'dateupdated_label' => FG::formatDateTimeHuman($item->updated_at),
                 ];
             });
 
-            $summary  = $this->getSummary($company_id);
+            $summary = $this->getSummary($company_id);
 
             $response['success'] = true;
             $response['data'] = [
@@ -86,10 +97,10 @@ class PurchaseDow
                 'per_page' => $perPage,
                 'total' => $total,
                 'total_pages' => ceil($total / $perPage),
-                'data' => $data,
                 'summary' => $summary,
+                'data' => $data
             ];
-            $response['message'] = 'successully';
+            $response['message'] = 'successfully';
         } catch (\Exception $e) {
             $response['message'] = $e->getMessage();
         }
@@ -342,11 +353,8 @@ class PurchaseDow
         $detail->purchase_id = $purchase->id;
         $detail->product_id = $item['product_id'];
         $detail->quantity = $item['quantity'];
-        $detail->unit_cost = $item['unit_cost'];
-        $detail->discount = $item['discount'];
-        $detail->tax = $item['tax'];
+        $detail->purchase_price = $item['purchase_price'];
         $detail->subtotal = $item['subtotal'];
-        $detail->total = $item['total'];
         $detail->save();
     }
 

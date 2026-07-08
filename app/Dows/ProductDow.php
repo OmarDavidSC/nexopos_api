@@ -135,7 +135,12 @@ class ProductDow
             $products = $products->map(function ($item) {
                 return [
                     'id' => $item->id,
+                    'code' => $item->code,
                     'name' => $item->name,
+                    'purchase_price' => $item->purchase_price,  
+                    'current_stock' => $item->current_stock,
+                    'minimum_stock' => $item->minimum_stock,
+                    'unit_id' => $item->unit_id,
                 ];
             });
 

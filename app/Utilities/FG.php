@@ -117,6 +117,24 @@ class FG
         return round($size, $precision);
     }
 
+    public static function getStatusLabel(string $status): string
+    {
+        switch ($status) {
+
+            case 'PENDING':
+                return 'Pendiente';
+
+            case 'COMPLETED':
+                return 'Completada';
+
+            case 'CANCELLED':
+                return 'Cancelada';
+
+            default:
+                return '-';
+        }
+    }
+
     public static function getRound($valor)
     {
         return round($valor, 2);
