@@ -138,6 +138,7 @@ class ProductDow
                     'code' => $item->code,
                     'name' => $item->name,
                     'purchase_price' => $item->purchase_price,  
+                    'sale_price' => $item->sale_price,  
                     'current_stock' => $item->current_stock,
                     'minimum_stock' => $item->minimum_stock,
                     'unit_id' => $item->unit_id,
