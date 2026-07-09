@@ -10,6 +10,7 @@ class InventoryService
         int $company_id,
         int $product_id,
         int $user_id,
+        int $branch_id,
         string $type,
         int $quantity,
         float $stock_before,
@@ -23,6 +24,7 @@ class InventoryService
         $movement->company_id = $company_id;
         $movement->product_id = $product_id;
         $movement->user_id = $user_id;
+        $movement->branch_id = $branch_id;
         $movement->type = $type;
         $movement->quantity = $quantity;
         $movement->stock_before = $stock_before;

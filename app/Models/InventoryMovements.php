@@ -15,6 +15,7 @@ class InventoryMovements extends Model
         'company_id',
         'product_id',
         'user_id',
+        'branch_id',
         'type',
         'quantity',
         'stock_before',

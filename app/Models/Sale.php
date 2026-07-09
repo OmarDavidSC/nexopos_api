@@ -15,6 +15,7 @@ class Sale extends Model
         'company_id',
         'customer_id',
         'user_id',
+        'branch_id',
         'sale_date',
         'voucher_type',
         'voucher_series',

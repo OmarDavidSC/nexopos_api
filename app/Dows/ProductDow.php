@@ -4,6 +4,7 @@ namespace App\Dows;
 
 use App\Middlewares\Application;
 use App\Models\Product;
+use App\Models\ProductStocks;
 use Illuminate\Database\Capsule\Manager as DB;
 use App\Utilities\FG;
 
@@ -18,6 +19,7 @@ class ProductDow
 
             $input = $request->getParsedBody();
             $company_id = Application::getItem('company_id');
+            $branch_id = Application::getItem('branch_id');
 
             $page = isset($input['page']) ? (int)$input['page'] : 1;
             $perPage = 10;
@@ -28,8 +30,11 @@ class ProductDow
             $status = $input['status'] ?? '';
 
             $query = Product::with(['category:id,name', 'brand:id,name', 'unit:id,name,abbreviation'])
-                ->where('company_id', $company_id)
-                ->whereNull('deleted_at');
+                ->leftJoin('product_stocks as ps', function ($join) use ($branch_id) {
+                    $join->on('ps.product_id', '=', 'products.id')->where('ps.branch_id', '=', $branch_id);
+                })
+                ->where('products.company_id', $company_id)
+                ->select(['products.*', DB::raw('COALESCE(ps.current_stock,0) as current_stock'), DB::raw('COALESCE(ps.minimum_stock,0) as minimum_stock')]);
 
             // busqueda
             if (!empty($search)) {
@@ -137,8 +142,8 @@ class ProductDow
                     'id' => $item->id,
                     'code' => $item->code,
                     'name' => $item->name,
-                    'purchase_price' => $item->purchase_price,  
-                    'sale_price' => $item->sale_price,  
+                    'purchase_price' => $item->purchase_price,
+                    'sale_price' => $item->sale_price,
                     'current_stock' => $item->current_stock,
                     'minimum_stock' => $item->minimum_stock,
                     'unit_id' => $item->unit_id,
@@ -192,10 +197,16 @@ class ProductDow
             // $product->description = $description;
             $product->purchase_price = $purchase_price;
             $product->sale_price = $sale_price;
-            $product->minimum_stock = $minimum_stock;
-            $product->current_stock = $current_stock;
             $product->status = 1;
             $product->save();
+
+            ProductStocks::create([
+                'company_id' => $company_id,
+                'branch_id' => Application::getItem('branch_id'),
+                'product_id' => $product->id,
+                'current_stock' => $current_stock,
+                'minimum_stock' => $minimum_stock
+            ]);
 
             $response['success'] = true;
             $response['data'] = $product;
@@ -246,9 +257,17 @@ class ProductDow
             $product->description = $input['description'];
             $product->purchase_price = $input['purchase_price'];
             $product->sale_price = $input['sale_price'];
-            $product->minimum_stock = $input['minimum_stock'];
-            $product->current_stock = $input['current_stock'];
             $product->save();
+
+            $stock = ProductStocks::firstOrNew([
+                'company_id' => $company_id,
+                'branch_id' => Application::getItem('branch_id'),
+                'product_id' => $product->id
+            ]);
+
+            $stock->current_stock = $input['current_stock'];
+            $stock->minimum_stock = $input['minimum_stock'];
+            $stock->save();
 
             $response['success'] = true;
             $response['data'] = $product;
@@ -289,22 +308,27 @@ class ProductDow
         return $response;
     }
 
-    private function getSummary(int $company_id): array
+    private function getSummary($company_id)
     {
-        $products = Product::where('company_id', $company_id)
-            ->whereNull('deleted_at')
+        $branch_id = Application::getItem('branch_id');
+        $products = Product::leftJoin('product_stocks as ps', function ($join) use ($branch_id) {
+            $join->on('ps.product_id', '=', 'products.id')
+                ->where('ps.branch_id', '=', $branch_id);
+        })
+            ->where('products.company_id', $company_id)
+            ->whereNull('products.deleted_at')
             ->get([
-                'status',
-                'current_stock',
-                'minimum_stock'
+                'products.status',
+                DB::raw('COALESCE(ps.current_stock,0) as current_stock'),
+                DB::raw('COALESCE(ps.minimum_stock,0) as minimum_stock')
             ]);
 
         return [
             'total_products' => $products->count(),
             'active_productos' => $products->where('status', 1)->count(),
-            'low_stock' => $products->filter(function ($item) {
-                return $item->current_stock > 0 &&
-                    $item->current_stock <= $item->minimum_stock;
+            'low_stock' => $products->filter(function ($p) {
+                return $p->current_stock > 0 &&
+                    $p->current_stock <= $p->minimum_stock;
             })->count(),
             'out_stock' => $products->where('current_stock', '<=', 0)->count()
         ];

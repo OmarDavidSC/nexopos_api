@@ -22,12 +22,18 @@ class User extends Model
         'status',
     ];
 
-    public function companies(){
+    public function companies()
+    {
         return $this->belongsToMany(Company::class, 'user_company_role')->withPivot('role_id')->withTimestamps();
     }
 
     public function roles()
     {
         return $this->belongsToMany(Role::class, 'user_company_role')->withPivot('company_id')->withTimestamps();
+    }
+
+    public function branches()
+    {
+        return $this->belongsToMany(Branch::class, 'user_company_role')->withPivot('branch_id')->withTimestamps();
     }
 }

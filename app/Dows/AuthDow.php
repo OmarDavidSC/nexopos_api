@@ -29,8 +29,7 @@ class AuthDow
             $username = $input['username'];
             $password = $input['password'];
 
-            $user = User::with('companies')->where('username', $username)->first();
-
+            $user = User::with(['companies', 'branches'])->where('username', $username)->first();
             if (!$user) {
                 throw new \Exception('El usuario no existe');
             }
@@ -42,8 +41,15 @@ class AuthDow
             $companies = json_decode(json_encode($user->companies));
             $company = count($companies) ? $companies[0] : null;
 
+            $branches = json_decode(json_encode($user->branches));
+            $branch = count($branches) ? $branches[0] : null;
+
             if (!$company) {
                 throw new \Exception('El usuario no tiene ninguna compañía asociada!');
+            }
+
+            if (!$branch) {
+                throw new \Exception('El usuario no tiene ninguna sucursal asociada!');
             }
 
             $role_id = $company->pivot->role_id;
@@ -52,10 +58,12 @@ class AuthDow
             $token = FirebaseJWT::encode(Authenticate::payloadToken([
                 'user_id' => $user->id,
                 'company_id' => $company->id,
+                'branch_id' => $branch->id,
+                'role' => $role,
             ]), Authenticate::keySecretToken());
 
             $response['success'] = true;
-            $response['data'] = compact('user', 'company', 'role', 'token');
+            $response['data'] = compact('user', 'company', 'role', 'branch', 'token');
             $response['message'] = 'Se inicio sesión correctamente';
         } catch (\Exception $e) {
             $response['message'] = $e->getMessage();
@@ -210,7 +218,7 @@ class AuthDow
         $response = FG::responseDefault();
         try {
             $input = $request->getParsedBody();
-            $company_id = $input['company_id'] ?? Application::getItem('company')->id;
+            // $company_id = $input['company_id'] ?? Application::getItem('company')->id;
             $user_id = Application::getItem("user_id");
             $baseDomain  = $_ENV['API_ADMIN_URL'];
 
@@ -243,13 +251,18 @@ class AuthDow
             $role_id = $company->pivot->role_id;
             $role = Role::with("permissions")->where("id", $role_id)->first();
 
+            $branches = json_decode(json_encode($user->branches));
+            $branch = count($branches) ? $branches[0] : null;
+
             $token = FirebaseJWT::encode(Authenticate::payloadToken([
                 'user_id' => $user->id,
                 'company_id' => $company->id,
+                'branch_id' => $branch->id,
+                'role' => $role,
             ]), Authenticate::keySecretToken());
 
             $response['success'] = true;
-            $response['data'] = compact('user', 'company', 'role', 'token');
+            $response['data'] = compact('user', 'company', 'branch', 'role', 'token');
             $response['message'] = 'verify token';
         } catch (\Exception $e) {
             $error = $e->getMessage();

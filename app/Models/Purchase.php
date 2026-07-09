@@ -15,6 +15,7 @@ class Purchase extends Model
         'company_id',
         'supplier_id',
         'user_id',
+        'branch_id',
         'purchase_date',
         'voucher_type',
         'voucher_series',
@@ -31,11 +32,6 @@ class Purchase extends Model
     {
         return $this->belongsTo(Supplier::class, 'supplier_id');
     }
-
-    // public function supplier()
-    // {
-    //     return $this->belongsTo(Supplier::class);
-    // }
 
     public function user()
     {

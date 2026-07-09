@@ -4,9 +4,12 @@ namespace App\Dows;
 
 use App\Middlewares\Application;
 use App\Models\Product;
+use App\Models\ProductStocks;
 use App\Models\Purchase;
 use App\Models\PurchaseDetail;
+use App\Services\BranchService;
 use App\Services\InventoryService;
+use App\Services\ProductStockService;
 use Illuminate\Database\Capsule\Manager as DB;
 use App\Utilities\FG;
 
@@ -19,6 +22,8 @@ class PurchaseDow
         try {
             $input = $request->getParsedBody();
             $company_id = Application::getItem('company_id');
+            $branch_id = Application::getItem('branch_id');
+
             $page = isset($input['page']) ? (int)$input['page'] : 1;
             $perPage = 10;
 
@@ -35,6 +40,8 @@ class PurchaseDow
                 ->withCount('details')
                 ->where('company_id', $company_id)
                 ->whereNull('deleted_at');
+
+            BranchService::applyBranchScope($query);
 
             // Buscar
             if (!empty($search)) {
@@ -116,10 +123,11 @@ class PurchaseDow
             $input = $request->getParsedBody();
 
             $company_id = Application::getItem('company_id');
+            $branch_id = Application::getItem('branch_id');
             $user_id = Application::getItem('user_id');
 
             $this->validateStore($input);
-            $purchase = $this->createPurchase($input, $company_id, $user_id);
+            $purchase = $this->createPurchase($input, $company_id, $user_id, $branch_id);
             $details = json_decode($input['details'], true);
             foreach ($details as $detail) {
                 $this->processPurchaseDetail($purchase, $detail, $company_id, $user_id);
@@ -143,14 +151,18 @@ class PurchaseDow
         try {
             $id = $request->getAttribute('id');
             $company_id = Application::getItem('company_id');
-            $purchase = Purchase::with([
+            $branch_id = Application::getItem('branch_id');
+
+            $query = Purchase::with([
                 'supplier:id,business_name',
                 'details.product:id,code,name'
             ])
                 ->where('company_id', $company_id)
                 ->where('id', $id)
-                ->whereNull('deleted_at')
-                ->first();
+                ->whereNull('deleted_at');
+
+            BranchService::applyBranchScope($query);
+            $purchase = $query->first();
 
             if (!$purchase) {
                 $response['success'] = false;
@@ -209,13 +221,15 @@ class PurchaseDow
 
             $id = $request->getAttribute('id');
             $company_id = Application::getItem('company_id');
+            $branch_id = Application::getItem('branch_id');
             $user_id = Application::getItem('user_id');
 
-            $purchase = Purchase::with('details')
+            $query = Purchase::with('details')
                 ->where('company_id', $company_id)
                 ->where('id', $id)
-                ->whereNull('deleted_at')
-                ->first();
+                ->whereNull('deleted_at');
+            BranchService::applyBranchScope($query);
+            $purchase = $query->first();
 
             if (!$purchase) {
                 throw new \Exception("La compra no fue encontrada.");
@@ -246,37 +260,20 @@ class PurchaseDow
 
     private function getSummary($company_id)
     {
+        $query = Purchase::where('company_id', $company_id)
+            ->whereNull('deleted_at');
+        BranchService::applyBranchScope($query);
+        $total = (clone $query)->count();
+
+        $completed = (clone $query)->where('status', 'COMPLETED')->count();
+        $pending = (clone $query)->where('status', 'PENDING')->count();
+        $cancelled = (clone $query)->where('status', 'CANCELLED')->count();
+
         return [
-            'total_purchases' => Purchase::where('company_id', $company_id)
-                ->whereNull('deleted_at')
-                ->count(),
-
-            'completed' => Purchase::where('company_id', $company_id)
-                ->whereNull('deleted_at')
-                ->where('status', 'COMPLETED')
-                ->count(),
-
-            'pending' => Purchase::where('company_id', $company_id)
-                ->whereNull('deleted_at')
-                ->where('status', 'PENDING')
-                ->count(),
-
-            'cancelled' => Purchase::where('company_id', $company_id)
-                ->whereNull('deleted_at')
-                ->where('status', 'CANCELLED')
-                ->count(),
-
-            'total_amount' => Purchase::where('company_id', $company_id)
-                ->whereNull('deleted_at')
-                ->where('status', 'COMPLETED')
-                ->sum('total'),
-
-            'this_month_amount' => Purchase::where('company_id', $company_id)
-                ->whereNull('deleted_at')
-                ->where('status', 'COMPLETED')
-                ->whereMonth('purchase_date', date('m'))
-                ->whereYear('purchase_date', date('Y'))
-                ->sum('total'),
+            'total_purchases' => $total,
+            'completed' => $completed,
+            'pending' => $pending,
+            'cancelled' => $cancelled,
         ];
     }
 
@@ -301,12 +298,13 @@ class PurchaseDow
         }
     }
 
-    private function createPurchase($input, $company_id, $user_id)
+    private function createPurchase($input, $company_id, $user_id, $branch_id)
     {
         $purchase = new Purchase();
         $purchase->company_id = $company_id;
         $purchase->supplier_id = $input['supplier_id'];
         $purchase->user_id = $user_id;
+        $purchase->branch_id = $branch_id;
         $purchase->purchase_date = $input['purchase_date'];
         $purchase->voucher_type = $input['voucher_type'];
         $purchase->voucher_series = $input['voucher_series'];
@@ -329,17 +327,17 @@ class PurchaseDow
             throw new \Exception("Producto no encontrado.");
         }
 
-        $stock_before = $product->current_stock;
         $this->createPurchaseDetail($purchase, $item);
-        $this->updateProductStock($product, $item['quantity']);
+        $result = ProductStockService::increase($company_id, $purchase->branch_id, $product->id, $item['quantity']);
         InventoryService::createMovement(
             $company_id,
             $product->id,
             $user_id,
+            $purchase->branch_id,
             'PURCHASE',
             $item['quantity'],
-            $stock_before,
-            $product->current_stock,
+            $result['before'],
+            $result['after'],
             'PURCHASE',
             $purchase->id,
             'Ingreso por compra'
@@ -358,38 +356,23 @@ class PurchaseDow
         $detail->save();
     }
 
-    private function updateProductStock(Product $product, $quantity)
-    {
-        $product->current_stock += $quantity;
-        $product->save();
-    }
-
     private function reversePurchaseDetail(Purchase $purchase, PurchaseDetail $detail, int $company_id, int $user_id)
     {
-
         $product = Product::find($detail->product_id);
         if (!$product) {
             throw new \Exception("Producto no encontrado.");
         }
 
-        $stock_before = $product->current_stock;
-        if ($stock_before < $detail->quantity) {
-            throw new \Exception(
-                "No es posible cancelar la compra porque el producto '{$product->name}' ya no tiene suficiente stock."
-            );
-        }
-
-        $product->current_stock -= $detail->quantity;
-        $product->save();
-
+        $result = ProductStockService::decrease($company_id, $purchase->branch_id, $detail->product_id, $detail->quantity);
         InventoryService::createMovement(
             $company_id,
             $product->id,
             $user_id,
+            $purchase->branch_id,
             'ADJUSTMENT_OUT',
             $detail->quantity,
-            $stock_before,
-            $product->current_stock,
+            $result['before'],
+            $result['after'],
             'PURCHASE_CANCEL',
             $purchase->id,
             'Salida por cancelación de compra'

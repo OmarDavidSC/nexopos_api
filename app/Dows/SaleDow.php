@@ -6,7 +6,9 @@ use App\Middlewares\Application;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleDetail;
+use App\Services\BranchService;
 use App\Services\InventoryService;
+use App\Services\ProductStockService;
 use Illuminate\Database\Capsule\Manager as DB;
 use App\Utilities\FG;
 
@@ -20,6 +22,7 @@ class SaleDow
 
             $input = $request->getParsedBody();
             $company_id = Application::getItem('company_id');
+            $branch_id = Application::getItem('branch_id');
 
             $page = isset($input['page']) ? (int)$input['page'] : 1;
             $perPage = 10;
@@ -37,6 +40,7 @@ class SaleDow
                 ->where('company_id', $company_id)
                 ->whereNull('deleted_at');
 
+            BranchService::applyBranchScope($query);
 
             if (!empty($search)) {
                 $query->where(function ($q) use ($search) {
@@ -109,10 +113,11 @@ class SaleDow
         try {
             $input = $request->getParsedBody();
             $company_id = Application::getItem('company_id');
+            $branch_id = Application::getItem('branch_id');
             $user_id = Application::getItem('user_id');
 
             $this->validateStore($input);
-            $sale = $this->createSale($input, $company_id, $user_id);
+            $sale = $this->createSale($input, $company_id, $user_id, $branch_id);
             $details = json_decode($input['details'], true);
 
             foreach ($details as $detail) {
@@ -137,15 +142,19 @@ class SaleDow
         try {
             $id = $request->getAttribute('id');
             $company_id = Application::getItem('company_id');
+            $branch_id = Application::getItem('branch_id');
 
-            $sale = Sale::with([
+            $query = Sale::with([
                 'customer:id,name',
                 'details.product:id,code,name'
             ])
                 ->where('company_id', $company_id)
+                ->where('branch_id', $branch_id)
                 ->where('id', $id)
-                ->whereNull('deleted_at')
-                ->first();
+                ->whereNull('deleted_at');
+
+            BranchService::applyBranchScope($query);
+            $sale = $query->first();
 
             if (!$sale) {
                 throw new \Exception("La venta no fue encontrada.");
@@ -198,13 +207,17 @@ class SaleDow
         try {
             $id = $request->getAttribute('id');
             $company_id = Application::getItem('company_id');
+            $branch_id = Application::getItem('branch_id');
             $user_id = Application::getItem('user_id');
 
-            $sale = Sale::with('details')
+            $query = Sale::with('details')
                 ->where('company_id', $company_id)
+                ->where('branch_id', $branch_id)
                 ->where('id', $id)
-                ->whereNull('deleted_at')
-                ->first();
+                ->whereNull('deleted_at');
+
+            BranchService::applyBranchScope($query);
+            $sale = $query->first();
 
             if (!$sale) {
                 throw new \Exception("La venta no fue encontrada.");
@@ -234,27 +247,15 @@ class SaleDow
 
     private function getSummary($company_id)
     {
+        $query = Sale::where('company_id', $company_id)
+            ->whereNull('deleted_at');
+        BranchService::applyBranchScope($query);
+
         return [
-            'total_sales' => Sale::where('company_id', $company_id)
-                ->whereNull('deleted_at')
-                ->count(),
-            'completed' => Sale::where('company_id', $company_id)
-                ->where('status', 'COMPLETED')
-                ->count(),
-            'pending' => Sale::where('company_id', $company_id)
-                ->where('status', 'PENDING')
-                ->count(),
-            'cancelled' => Sale::where('company_id', $company_id)
-                ->where('status', 'CANCELLED')
-                ->count(),
-            'total_amount' => Sale::where('company_id', $company_id)
-                ->where('status', 'COMPLETED')
-                ->sum('total'),
-            'this_month_amount' => Sale::where('company_id', $company_id)
-                ->where('status', 'COMPLETED')
-                ->whereMonth('sale_date', date('m'))
-                ->whereYear('sale_date', date('Y'))
-                ->sum('total')
+            'total_sales' => (clone $query)->count(),
+            'completed' => (clone $query)->where('status', 'COMPLETED')->count(),
+            'cancelled' => (clone $query)->where('status', 'CANCELLED')->count(),
+            'total_amount' => (clone $query)->where('status', 'COMPLETED')->sum('total'),
         ];
     }
 
@@ -278,11 +279,12 @@ class SaleDow
         }
     }
 
-    private function createSale($input, $company_id, $user_id)
+    private function createSale($input, $company_id, $user_id, $branch_id)
     {
 
         $sale = new Sale();
         $sale->company_id = $company_id;
+        $sale->branch_id = $branch_id;
         $sale->customer_id = $input['customer_id'];
         $sale->user_id = $user_id;
         $sale->sale_date = $input['sale_date'];
@@ -306,22 +308,17 @@ class SaleDow
             throw new \Exception("Producto no encontrado.");
         }
 
-        if ($product->current_stock < $item['quantity']) {
-            throw new \Exception("Stock insuficiente para {$product->name}");
-        }
-
-        $stock_before = $product->current_stock;
         $this->createSaleDetail($sale, $item);
-        $product->current_stock -= $item['quantity'];
-        $product->save();
+        $result = ProductStockService::decrease($company_id, $sale->branch_id, $product->id, $item['quantity']);
         InventoryService::createMovement(
             $company_id,
             $product->id,
             $user_id,
+            $sale->branch_id,
             'SALE',
             $item['quantity'],
-            $stock_before,
-            $product->current_stock,
+            $result['before'],
+            $result['after'],
             'SALE',
             $sale->id,
             'Salida por venta'
@@ -348,17 +345,15 @@ class SaleDow
         }
 
         $stock_before = $product->current_stock;
-        $product->current_stock += $detail->quantity;
-        $product->save();
-
+        $result = ProductStockService::increase($company_id, $sale->branch_id, $detail->product_id, $detail->quantity);
         InventoryService::createMovement(
             $company_id,
             $product->id,
             $user_id,
             'ADJUSTMENT_IN',
             $detail->quantity,
-            $stock_before,
-            $product->current_stock,
+            $result['before'],
+            $result['after'],
             'SALE_CANCEL',
             $sale->id,
             'Ingreso por cancelación de venta'

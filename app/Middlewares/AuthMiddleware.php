@@ -74,6 +74,8 @@ class AuthMiddleware
                 }
                 Application::setItem("user_id", $data->user_id);
                 Application::setItem("company_id", $data->company_id);
+                Application::setItem("branch_id", $data->branch_id);
+                Application::setItem("role", $data->role);
             }
         } catch (\Exception $e) {
             http_response_code(401);
@@ -109,6 +111,8 @@ class AuthMiddleware
             $decrypted = Crypt::decrypt($decoded->data);
             Application::setItem("user_id", $decrypted->user_id);
             Application::setItem("company_id", $decrypted->company_id);
+            Application::setItem("branch_id", $decrypted->branch_id);
+            Application::setItem("role", $decrypted->role);
         }
     }
 }
