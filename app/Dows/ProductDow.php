@@ -5,6 +5,7 @@ namespace App\Dows;
 use App\Middlewares\Application;
 use App\Models\Product;
 use App\Models\ProductStocks;
+use App\Services\ProductStockService;
 use Illuminate\Database\Capsule\Manager as DB;
 use App\Utilities\FG;
 
@@ -128,24 +129,25 @@ class ProductDow
     {
         $response = FG::responseDefault();
         try {
-            $input = $request->getParsedBody();
-
             $company_id = Application::getItem('company_id');
+            $branch_id = Application::getItem('branch_id');
 
             $products = Product::where('company_id', $company_id)
                 ->whereNull('deleted_at')
                 ->orderBy('name', 'asc')
                 ->get();
 
-            $products = $products->map(function ($item) {
+            $products = $products->map(function ($item) use ($company_id, $branch_id) {
+                $stock = ProductStockService::getStock($company_id, $branch_id, $item->id);
+
                 return [
                     'id' => $item->id,
                     'code' => $item->code,
                     'name' => $item->name,
                     'purchase_price' => $item->purchase_price,
                     'sale_price' => $item->sale_price,
-                    'current_stock' => $item->current_stock,
-                    'minimum_stock' => $item->minimum_stock,
+                    'current_stock' => $stock->current_stock,
+                    'minimum_stock' => $stock->minimum_stock,
                     'unit_id' => $item->unit_id,
                 ];
             });

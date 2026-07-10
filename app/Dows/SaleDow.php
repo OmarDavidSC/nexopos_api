@@ -149,7 +149,6 @@ class SaleDow
                 'details.product:id,code,name'
             ])
                 ->where('company_id', $company_id)
-                ->where('branch_id', $branch_id)
                 ->where('id', $id)
                 ->whereNull('deleted_at');
 
@@ -212,7 +211,6 @@ class SaleDow
 
             $query = Sale::with('details')
                 ->where('company_id', $company_id)
-                ->where('branch_id', $branch_id)
                 ->where('id', $id)
                 ->whereNull('deleted_at');
 
@@ -350,6 +348,7 @@ class SaleDow
             $company_id,
             $product->id,
             $user_id,
+            $sale->branch_id,
             'ADJUSTMENT_IN',
             $detail->quantity,
             $result['before'],
