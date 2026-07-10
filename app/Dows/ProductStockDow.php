@@ -14,29 +14,61 @@ class ProductStockDow
     public function index($request)
     {
         $response = FG::responseDefault();
+
         try {
-            $input = $request->getParsedBody();
 
             $company_id = Application::getItem('company_id');
             $branch_id = $request->getAttribute('branch_id');
 
-            $stocks = ProductStocks::with(['product.category', 'product.brand', 'product.unit'])
-                ->where('company_id', $company_id)
-                ->where('branch_id', $branch_id)
-                ->get();
+            $query = Product::with([
+                'category:id,name',
+                'brand:id,name',
+                'unit:id,name'
+            ])
+                ->leftJoin('product_stocks as ps', function ($join) use ($branch_id) {
+                    $join->on('ps.product_id', '=', 'products.id')
+                        ->where('ps.branch_id', '=', $branch_id);
+                })
+                ->where('products.company_id', $company_id)
+                ->whereNull('products.deleted_at')
+                ->select([
+                    'products.id as product_id',
+                    'products.code',
+                    'products.name',
+                    'products.category_id',
+                    'products.brand_id',
+                    'products.unit_id',
+                    'ps.id as stock_id',
+                    DB::raw('COALESCE(ps.current_stock,0) as current_stock'),
+                    DB::raw('COALESCE(ps.minimum_stock,0) as minimum_stock')
+                ]);
 
+            $products = $query->get();
 
-            $data = $stocks->map(function ($item) {
+            $data = $products->map(function ($item) {
+                if ($item->current_stock <= 0) {
+                    $stock_status = 'Agotado';
+                    $stock_color = 'danger';
+                } elseif ($item->current_stock <= $item->minimum_stock) {
+                    $stock_status = 'Stock Bajo';
+                    $stock_color = 'warning';
+                } else {
+                    $stock_status = 'Disponible';
+                    $stock_color = 'success';
+                }
+
                 return [
-                    'id' => $item->id,
+                    'id' => $item->stock_id,
                     'product_id' => $item->product_id,
-                    'code' => $item->product?->code,
-                    'name' => $item->product?->name,
-                    'category' => $item->product?->category?->name,
-                    'brand' => $item->product?->brand?->name,
-                    'unit' => $item->product?->unit?->name,
+                    'code' => $item->code,
+                    'name' => $item->name,
+                    'category' => $item->category?->name,
+                    'brand' => $item->brand?->name,
+                    'unit' => $item->unit?->name,
                     'current_stock' => $item->current_stock,
-                    'minimum_stock' => $item->minimum_stock
+                    'minimum_stock' => $item->minimum_stock,
+                    'stock_status' => $stock_status,
+                    'stock_color' => $stock_color
                 ];
             });
 
@@ -45,7 +77,7 @@ class ProductStockDow
                 'summary' => $this->getSummary($company_id, $branch_id),
                 'data' => $data
             ];
-            $response['message'] = 'successfully';
+            $response['message'] = 'successfully.';
         } catch (\Exception $e) {
             $response['message'] = $e->getMessage();
         }
@@ -59,24 +91,19 @@ class ProductStockDow
             $input = $request->getParsedBody();
             $company_id = Application::getItem('company_id');
 
-            $exists = ProductStocks::where(['company_id' => $company_id, 'branch_id' => $input['branch_id'], 'product_id' => $input['product_id']])->first();
-
-            if ($exists) {
-                $response['success'] = false;
-                $response['message'] = 'El producto ya tiene stock asignado en esta sucursal.';
-                return $response;
-            }
-
-            $stock = new ProductStocks();
-            $stock->company_id = $company_id;
-            $stock->branch_id = $input['branch_id'];
-            $stock->product_id = $input['product_id'];
-            $stock->current_stock = $input['current_stock'] ?? 0;
-            $stock->minimum_stock = $input['minimum_stock'] ?? 0;
-            $stock->save();
+            ProductStocks::updateOrCreate(
+                [
+                    'company_id' => $company_id,
+                    'branch_id' => $input['branch_id'],
+                    'product_id' => $input['product_id']
+                ],
+                [
+                    'current_stock' => $input['current_stock'],
+                    'minimum_stock' => $input['minimum_stock']
+                ]
+            );
 
             $response['success'] = true;
-            $response['data'] = $stock;
             $response['message'] = 'Stock asignado correctamente.';
         } catch (\Exception $e) {
             $response['message'] = $e->getMessage();

@@ -94,6 +94,7 @@ class ProductDow
                     'unit_id' => $item->unit_id,
                     'unit' => $item->unit?->name,
                     'purchase_price' => $item->purchase_price,
+                    'sale_price' => $item->sale_price,
                     'status' => $item->status,
                     'status_label' => $item->status == 1 ? 'Activo' : 'Inactivo',
                     'datecreated_label' => FG::formatDateTimeHuman($item->created_at),
