@@ -13,6 +13,8 @@ $map->attach('api.', '/api', function ($map) {
     include __DIR__ . "/api/MeetingRoute.php";
     include __DIR__ . "/api/S3AwsRoute.php";
     include __DIR__ . "/api/ProfileRoute.php";
+    include __DIR__ . "/api/UserRoute.php";
+    include __DIR__ . "/api/BranchRoute.php";
 
     //1 modulo
     include __DIR__ . "/api/BrandRoute.php";
