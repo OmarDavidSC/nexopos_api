@@ -17,4 +17,9 @@ class ProductStocks extends Model
         'current_stock',
         'minimum_stock',
     ];
+
+    public function product()
+    {
+        return $this->belongsTo(Product::class, 'product_id');
+    }
 }

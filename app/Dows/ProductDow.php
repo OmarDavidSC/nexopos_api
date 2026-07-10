@@ -94,11 +94,6 @@ class ProductDow
                     'unit_id' => $item->unit_id,
                     'unit' => $item->unit?->name,
                     'purchase_price' => $item->purchase_price,
-                    'sale_price' => $item->sale_price,
-                    'current_stock' => $item->current_stock,
-                    'minimum_stock' => $item->minimum_stock,
-                    'stock_status' => $stock_status,
-                    'stock_color' => $stock_color,
                     'status' => $item->status,
                     'status_label' => $item->status == 1 ? 'Activo' : 'Inactivo',
                     'datecreated_label' => FG::formatDateTimeHuman($item->created_at),
@@ -106,11 +101,8 @@ class ProductDow
                 ];
             });
 
-            $summary = $this->getSummary($company_id);
-
             $response['success'] = true;
             $response['data'] = [
-                'summary' => $summary,
                 'page' => $page,
                 'per_page' => $perPage,
                 'total' => $total,
@@ -178,8 +170,6 @@ class ProductDow
             $description = trim($input['description']);
             $purchase_price = trim($input['purchase_price']);
             $sale_price = trim($input['sale_price']);
-            $minimum_stock = trim($input['minimum_stock']);
-            $current_stock = trim($input['current_stock']);
 
             //validacion de campos obligatorios
             if (empty($name) || empty($category_id) || empty($brand_id) || empty($purchase_price) || empty($sale_price)) {
@@ -201,14 +191,6 @@ class ProductDow
             $product->sale_price = $sale_price;
             $product->status = 1;
             $product->save();
-
-            ProductStocks::create([
-                'company_id' => $company_id,
-                'branch_id' => Application::getItem('branch_id'),
-                'product_id' => $product->id,
-                'current_stock' => $current_stock,
-                'minimum_stock' => $minimum_stock
-            ]);
 
             $response['success'] = true;
             $response['data'] = $product;
@@ -260,16 +242,6 @@ class ProductDow
             $product->purchase_price = $input['purchase_price'];
             $product->sale_price = $input['sale_price'];
             $product->save();
-
-            $stock = ProductStocks::firstOrNew([
-                'company_id' => $company_id,
-                'branch_id' => Application::getItem('branch_id'),
-                'product_id' => $product->id
-            ]);
-
-            $stock->current_stock = $input['current_stock'];
-            $stock->minimum_stock = $input['minimum_stock'];
-            $stock->save();
 
             $response['success'] = true;
             $response['data'] = $product;
