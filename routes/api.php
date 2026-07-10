@@ -27,4 +27,6 @@ $map->attach('api.', '/api', function ($map) {
     //3 modulo
     include __DIR__ . "/api/CustomerRoute.php";
     include __DIR__ . "/api/SaleRoute.php";
+    //4 caja
+    include __DIR__ . "/api/CashRoute.php";
 });
