@@ -32,7 +32,6 @@ class ReportPurchaseDow
 
             $response['message'] = 'successfully.';
         } catch (\Exception $e) {
-
             $response['message'] = $e->getMessage();
         }
         return $response;

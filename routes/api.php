@@ -33,4 +33,5 @@ $map->attach('api.', '/api', function ($map) {
     //5 reporte
     include __DIR__ . "/api/ReportSaleRoute.php";
     include __DIR__ . "/api/ReportPurchaseRoute.php";
+    include __DIR__ . "/api/ReportInventoryRoute.php";
 });
