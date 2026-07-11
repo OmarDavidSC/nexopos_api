@@ -2,7 +2,7 @@
 
 $map->attach('dashboards.', '/dashboard', function ($map) {
 
-    $map->post('index', '', [
+    $map->get('index', '', [
         'Controller' => 'App\Controllers\DashboardController',
         'Action' => 'index'
     ]);
