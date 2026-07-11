@@ -29,5 +29,7 @@ $map->attach('api.', '/api', function ($map) {
     include __DIR__ . "/api/CustomerRoute.php";
     include __DIR__ . "/api/SaleRoute.php";
     //4 caja
-    include __DIR__ . "/api/CashRoute.php";
+    // include __DIR__ . "/api/CashRoute.php";
+    //5 reporte
+    include __DIR__ . "/api/ReportSaleRoute.php";
 });
