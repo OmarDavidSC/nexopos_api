@@ -22,13 +22,14 @@ class SaleDow
 
             $input = $request->getParsedBody();
             $company_id = Application::getItem('company_id');
-            $branch_id = Application::getItem('branch_id');
+            // $branch_id = Application::getItem('branch_id');
 
             $page = isset($input['page']) ? (int)$input['page'] : 1;
             $perPage = 10;
 
             $search = trim($input['search'] ?? '');
             $customer_id = isset($input['customer_id']) && $input['customer_id'] !== '' ? (int)$input['customer_id'] : null;
+            $branch_id = isset($input['branch_id']) && $input['branch_id'] !== '' ? (int)$input['branch_id'] : null;
             $status = $input['status'] ?? '';
             $payment_method = $input['payment_method'] ?? '';
 
@@ -54,6 +55,10 @@ class SaleDow
 
             if (!empty($customer_id)) {
                 $query->where('customer_id', $customer_id);
+            }
+
+            if (!empty($branch_id)) {
+                $query->where('branch_id', $branch_id);
             }
 
             if ($status !== '') {
