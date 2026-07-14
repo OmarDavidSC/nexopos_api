@@ -19,6 +19,11 @@ class UserController extends BaseController
         return Response::json($this->dow->index($request));
     }
 
+     public function adm($request)
+    {
+        return Response::json($this->dow->adm($request));
+    }
+
     public function store($request)
     {
         return Response::json($this->dow->store($request));

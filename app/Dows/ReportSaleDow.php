@@ -28,7 +28,7 @@ class ReportSaleDow
                 'top_customers'    => $this->topCustomers(clone $query),
                 'payment_methods'  => $this->paymentMethods(clone $query),
                 'voucher_types'    => $this->voucherTypes(clone $query),
-                'sales'            => $this->salesList(clone $query)
+                // 'sales'            => $this->salesList(clone $query)
             ];
 
             $response['message'] = 'successfully.';

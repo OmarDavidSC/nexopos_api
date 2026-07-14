@@ -6,6 +6,10 @@ $map->attach('users.', '/user', function ($map) {
         'Controller' => 'App\Controllers\UserController',
         'Action' => 'index'
     ]);
+    $map->get('adm', '/adm', [
+        'Controller' => 'App\Controllers\UserController',
+        'Action' => 'adm'
+    ]);
     $map->post('store', '/store', [
         'Controller' => 'App\Controllers\UserController',
         'Action' => 'store'

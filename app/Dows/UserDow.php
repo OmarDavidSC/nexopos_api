@@ -76,6 +76,37 @@ class UserDow
         return $response;
     }
 
+    public function adm($request)
+    {
+        $response = FG::responseDefault();
+
+        try {
+            $company_id = Application::getItem('company_id');
+
+            $areas = User::select('users.*')
+                ->join('user_company_role', 'users.id', '=', 'user_company_role.user_id')
+                ->where('user_company_role.company_id', $company_id)
+                ->whereNull('users.deleted_at')
+                ->orderBy('users.name', 'asc')
+                ->get();
+
+            $areas = $areas->map(function ($item) {
+                return [
+                    'id' => $item->id,
+                    'name' => $item->name
+                ];
+            });
+
+            $response['success'] = true;
+            $response['data'] = $areas;
+            $response['message'] = 'adm';
+        } catch (\Exception $e) {
+            $response['message'] = $e->getMessage();
+        }
+
+        return $response;
+    }
+
     public function store($request)
     {
         $response = FG::responseDefault();

@@ -27,7 +27,7 @@ class ReportPurchaseDow
                 'top_suppliers'      => $this->topSuppliers(clone $query),
                 'voucher_types'      => $this->voucherTypes(clone $query),
                 'purchase_status'    => $this->purchaseStatus(clone $query),
-                'purchases'          => $this->purchaseList(clone $query)
+                // 'purchases'          => $this->purchaseList(clone $query)
             ];
 
             $response['message'] = 'successfully.';
