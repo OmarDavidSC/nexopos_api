@@ -44,6 +44,13 @@ RUN curl -sS https://getcomposer.org/installer | php -- \
     --install-dir=/usr/local/bin \
     --filename=composer
 
+
+COPY . /var/www/html
+
+COPY config/docker/apache/000-default.conf /etc/apache2/sites-available/000-default.conf
+
+RUN a2enmod rewrite headers
+
 COPY . .
 
 RUN composer config --global audit.block-insecure false
