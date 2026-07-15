@@ -18,6 +18,9 @@ RUN apt-get update && apt-get install -y \
 RUN pecl install mongodb \
     && docker-php-ext-enable mongodb
 
+RUN php -m | grep mongodb
+RUN php --ri mongodb
+
 RUN echo "memory_limit=1024M" > /usr/local/etc/php/conf.d/custom.ini \
  && echo "upload_max_filesize=1024M" >> /usr/local/etc/php/conf.d/custom.ini \
  && echo "post_max_size=1024M" >> /usr/local/etc/php/conf.d/custom.ini
