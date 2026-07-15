@@ -12,6 +12,7 @@ RUN apt-get update && apt-get install -y \
     libonig-dev \
     libicu-dev \
     libssl-dev \
+    libxml2-dev \
     pkg-config \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j$(nproc) \
@@ -21,6 +22,11 @@ RUN apt-get update && apt-get install -y \
         zip \
         gd \
         intl \
+        dom \
+        simplexml \
+        xml \
+        xmlreader \
+        xmlwriter \
     && pecl install mongodb \
     && docker-php-ext-enable mongodb \
     && rm -rf /var/lib/apt/lists/*
@@ -36,7 +42,8 @@ RUN composer install \
     --no-interaction \
     --prefer-dist \
     --optimize-autoloader \
-    --no-scripts
+    --no-scripts \
+    --verbose
 
 COPY . .
 
@@ -47,7 +54,7 @@ RUN printf '%s\n' \
     '<VirtualHost *:${PORT}>' \
     '    DocumentRoot /var/www/html/public' \
     '    <Directory /var/www/html/public>' \
-    '        Options Indexes FollowSymLinks' \
+    '        Options FollowSymLinks' \
     '        AllowOverride All' \
     '        Require all granted' \
     '        DirectoryIndex index.php' \
