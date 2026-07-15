@@ -44,6 +44,10 @@ class CompanyDow
             }
 
             $company->name = $input['name'] ?? $company->name;
+            $company->country_code = $input['country_code'] ?? $company->country_code;
+            $company->currency_code = $input['currency_code'] ?? $company->currency_code;
+            $company->currency_symbol = $input['currency_symbol'] ?? $company->currency_symbol;
+            $company->currency_name = $input['currency_name'] ?? $company->currency_name;
 
             if (isset($input['terms_conditions'])) {
                 $company->terms_conditions = $input['terms_conditions'];

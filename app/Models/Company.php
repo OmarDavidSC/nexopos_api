@@ -12,6 +12,10 @@ class Company extends Model
     protected $fillable = [
         'id',
         'name',
+        'country_code',
+        'currency_code',
+        'currency_symbol',
+        'currency_name',
         'favicon_id',
         'logo_id',
         'status',
