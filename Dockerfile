@@ -46,7 +46,9 @@ RUN curl -sS https://getcomposer.org/installer | php -- \
 
 COPY composer.json ./
 
-RUN composer update
+RUN composer config --global audit.block-insecure false
+
+RUN composer update -W
 
 RUN a2enmod rewrite
 RUN a2enmod headers
