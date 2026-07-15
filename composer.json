@@ -7,10 +7,10 @@
 	"require": {
 		"illuminate/database": "^6.0",
 		"aura/router": "^3.1",
-		"twig/twig": "^2.11",
+		"twig/twig": "^3.0",
 		"vlucas/phpdotenv": "^5.0",
 		"phpmailer/phpmailer": "^6.5",
-		"firebase/php-jwt": "^5.4",
+		"firebase/php-jwt": "^6.11",
 		"curl/curl": "^2.4",
 		"laminas/laminas-diactoros": "^2.24",
 		"vimeo/vimeo-api": "^3.0",
