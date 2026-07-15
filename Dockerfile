@@ -1,4 +1,4 @@
-FROM php:7.4.30-apache
+FROM php:8.1.25-apache
 WORKDIR /var/www/html
 RUN apt-get update
 
@@ -44,7 +44,7 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-install -j$(nproc) gd mbstring zip
 
 # Install MongoDB
-RUN pecl install mongodb
+RUN pecl install mongodb  && docker-php-ext-enable mongodb
 
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg
 RUN docker-php-ext-install -j$(nproc) pdo pdo_mysql gd zip
