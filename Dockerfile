@@ -1,51 +1,61 @@
-FROM php:8.2-apache
-
+FROM php:7.4.30-apache
 WORKDIR /var/www/html
+RUN apt-get update
 
+RUN apt-get install -y libzip-dev libssl-dev zip
+RUN apt-get install -y \
+  libfreetype6-dev \
+  libjpeg62-turbo-dev \
+  libpng-dev
+
+# Instala las dependencias necesarias, incluyendo Python
+RUN apt-get update && \
+  apt-get install -y \
+  libssl-dev \
+  pkg-config \
+  cmake \
+  git \
+  build-essential \
+  python
+
+# Clona e instala libbson y libmongoc con soporte para SSL
+RUN git clone https://github.com/mongodb/mongo-c-driver.git && \
+  cd mongo-c-driver && \
+  git checkout 1.17.2 && \
+  mkdir cmake-build && \
+  cd cmake-build && \
+  cmake -DENABLE_AUTOMATIC_INIT_AND_CLEANUP=OFF -DENABLE_SSL=OPENSSL .. && \
+  make && \
+  make install
+
+# Instalar dependencias necesarias
 RUN apt-get update && apt-get install -y \
-    git \
-    unzip \
-    zip \
-    curl \
-    pkg-config \
-    libssl-dev \
-    libzip-dev \
     libpng-dev \
     libjpeg62-turbo-dev \
     libfreetype6-dev \
     libonig-dev \
+    libzip-dev \
+    unzip \
+    libssl-dev \
+    pkg-config \
+    cmake \
+    git \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install -j$(nproc) \
-        pdo \
-        pdo_mysql \
-        gd \
-        mbstring \
-        zip \
-    && pecl channel-update pecl.php.net \
-    && pecl install mongodb \
-    && docker-php-ext-enable mongodb \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* /tmp/*
+    && docker-php-ext-install -j$(nproc) gd mbstring zip
 
-RUN printf "%s\n" \
-    "memory_limit=1024M" \
-    "upload_max_filesize=1024M" \
-    "post_max_size=1024M" \
-    > /usr/local/etc/php/conf.d/custom.ini
+# Install MongoDB
+RUN pecl install mongodb
 
-RUN curl -sS https://getcomposer.org/installer | php \
-    -- --install-dir=/usr/local/bin --filename=composer
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg
+RUN docker-php-ext-install -j$(nproc) pdo pdo_mysql gd zip
+RUN docker-php-ext-enable mongodb pdo pdo_mysql gd zip
 
-COPY composer.json composer.lock* ./
 
-RUN composer install \
-    --no-dev \
-    --no-interaction \
-    --prefer-dist \
-    --optimize-autoloader
+RUN echo "memory_limit=1024M" > /usr/local/etc/php/conf.d/custom.ini
+RUN echo "upload_max_filesize=1024M" >> /usr/local/etc/php/conf.d/custom.ini
+RUN echo "post_max_size=1024M" >> /usr/local/etc/php/conf.d/custom.ini
 
-COPY . .
 
-RUN a2enmod rewrite headers
-
-RUN chown -R www-data:www-data /var/www/html
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+COPY ./composer.json ./
+RUN composer update
