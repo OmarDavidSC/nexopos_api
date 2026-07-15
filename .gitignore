@@ -1,6 +1,7 @@
 vendor/
 uploads/
 .env
+composer.lock
 public/uploads/profile-photos/*
 public/uploads/company-logos/*
 public/uploads/company-favicons/*

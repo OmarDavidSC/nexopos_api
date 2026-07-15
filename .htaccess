@@ -1,4 +1,4 @@
-<IfModule mod_headers.c>
+<!-- <IfModule mod_headers.c>
     Header set Access-Control-Allow-Origin "*"
     Header set Access-Control-Allow-Methods "GET, POST, OPTIONS"
     Header set Access-Control-Allow-Headers "Content-Type, Authorization"
@@ -13,4 +13,26 @@
 RewriteEngine On
 RewriteCond %{THE_REQUEST} /public/([^\s?]*) [NC]
 RewriteRule ^ %1 [L,NE,R=302]
-RewriteRule ^((?!public/).*)$ public/$1 [L,NC]
+RewriteRule ^((?!public/).*)$ public/$1 [L,NC] -->
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Quitar /public de la URL
+    RewriteCond %{THE_REQUEST} /public/([^\s?]*) [NC]
+    RewriteRule ^ %1 [L,NE,R=302]
+
+    # Redirigir todo a public
+    RewriteRule ^((?!public/).*)$ public/$1 [L,NC]
+
+    # Permitir peticiones OPTIONS (preflight)
+    RewriteCond %{REQUEST_METHOD} OPTIONS
+    RewriteRule ^(.*)$ public/index.php [QSA,L]
+</IfModule>
+
+<IfModule mod_headers.c>
+    Header always set Access-Control-Allow-Origin "*"
+    Header always set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+    Header always set Access-Control-Allow-Headers "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+    Header always set Access-Control-Allow-Credentials "true"
+</IfModule>
