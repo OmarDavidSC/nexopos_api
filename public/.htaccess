@@ -1,21 +1,4 @@
-<IfModule mod_rewrite.c>
-    RewriteEngine On
-
-    RewriteCond %{REQUEST_METHOD} OPTIONS
-    RewriteRule ^ - [R=204,L]
-
-    RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteRule ^ index.php [QSA,L]
-</IfModule>
-
-<IfModule mod_headers.c>
-    Header always unset Access-Control-Allow-Origin
-    Header always unset Access-Control-Allow-Methods
-    Header always unset Access-Control-Allow-Headers
-    Header always unset Access-Control-Allow-Credentials
-
-    Header always set Access-Control-Allow-Origin "https://nexopos-client.onrender.com"
-    Header always set Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS"
-    Header always set Access-Control-Allow-Headers "Origin, Content-Type, Accept, Authorization, X-Requested-With"
-</IfModule>
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^ index.php [QSA,L]
