@@ -9,6 +9,7 @@ use App\Models\SaleDetail;
 use App\Services\BranchService;
 use App\Services\InventoryService;
 use App\Services\ProductStockService;
+use App\Services\SunatApiService;
 use Illuminate\Database\Capsule\Manager as DB;
 use App\Utilities\FG;
 
@@ -129,6 +130,31 @@ class SaleDow
                 $this->processSaleDetail($sale, $detail, $company_id, $user_id);
             }
             DB::commit();
+
+            if (in_array($sale->voucher_type, ['BOLETA', 'FACTURA'])) {
+                $payload = $this->buildSunatPayload($sale);
+
+                $sunatService = new SunatApiService();
+                $sunatResult = $sunatService->emit($payload);
+
+                $sunatData = $sunatResult['response'] ?? [];
+
+                echo '<pre>';
+                var_dump([
+                    'payload_enviado' => $payload,
+                    'respuesta_completa' => $sunatResult,
+                    'respuesta_api' => $sunatResult['response'] ?? null,
+                    'documento' => $sunatResult['response']['data'] ?? null,
+                ]);
+                exit;
+
+                $sale->sunat_document_id = $sunatData['_id'] ?? $sunatData['documentId'] ?? $sunatData['id'] ?? null;
+
+                $sale->sunat_status = $sunatData['status'] ?? 'ERROR';
+                $sale->voucher_series = $sunatData['serie'] ?? $sale->voucher_series;
+                $sale->voucher_number = $sunatData['number'] ?? $sale->voucher_number;
+                $sale->save();
+            }
 
             $response['success'] = true;
             $response['data'] = $sale;
@@ -362,5 +388,50 @@ class SaleDow
             $sale->id,
             'Ingreso por cancelación de venta'
         );
+    }
+
+    private function buildSunatPayload(Sale $sale): array
+    {
+        $sale->load(['company', 'customer', 'details.product',]);
+        $company = $sale->company;
+        $customer = $sale->customer;
+
+        $tipoDocumento = match ($sale->voucher_type) {
+            'FACTURA' => '01',
+            'BOLETA' => '03',
+            default => null,
+        };
+
+        if (!$tipoDocumento) {
+            throw new \Exception('El tipo de comprobante no se envía a SUNAT.');
+        }
+
+        $items = [];
+        foreach ($sale->details as $detail) {
+            $items[] = ['descripcion' => $detail->product->name, 'cantidad' => (float)$detail->quantity, 'precio' => (float)$detail->sale_price,];
+        }
+
+        return [
+            'empresa' => [
+                'ruc' => $company->ruc,
+                'persona_id' => $company->sunat_persona_id,
+                'persona_token' => $company->sunat_persona_token,
+                'razon_social' => $company->business_name,
+                'nombre_comercial' => $company->name,
+                'direccion' => $company->fiscal_address,
+            ],
+            'cliente' => [
+                'tipo_documento' => $customer->document_type,
+                'numero_documento' => $customer->document_number,
+                'nombre' => $customer->name,
+                'direccion' => $customer->address ?? '-',
+            ],
+            'comprobante' => [
+                'tipo_documento' => $tipoDocumento,
+                'serie' => $sale->voucher_series,
+                'moneda' => $company->currency_code ?? 'PEN',
+            ],
+            'items' => $items,
+        ];
     }
 }

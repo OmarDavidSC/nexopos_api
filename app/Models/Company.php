@@ -12,6 +12,12 @@ class Company extends Model
     protected $fillable = [
         'id',
         'name',
+        'ruc',
+        'business_name',
+        // 'trade_name',
+        'fiscal_address',
+        'sunat_persona_id',
+        'sunat_persona_token',
         'country_code',
         'currency_code',
         'currency_symbol',
