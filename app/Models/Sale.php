@@ -28,6 +28,10 @@ class Sale extends Model
         'discount',
         'total',
         'status',
+        'pdf_58mm',
+        'pdf_80mm',
+        'pdf_a5',
+        'pdf_a4',
     ];
 
     public function customer()

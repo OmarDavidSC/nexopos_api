@@ -131,33 +131,50 @@ class SaleDow
             }
             DB::commit();
 
-            if (in_array($sale->voucher_type, ['BOLETA', 'FACTURA'])) {
+            if (in_array($sale->voucher_type, ['BOLETA', 'FACTURA'], true)) {
                 $payload = $this->buildSunatPayload($sale);
 
                 $sunatService = new SunatApiService();
                 $sunatResult = $sunatService->emit($payload);
 
-                $sunatData = $sunatResult['response'] ?? [];
+                $sunatResponse = $sunatResult['response'] ?? [];
 
-                echo '<pre>';
-                var_dump([
-                    'payload_enviado' => $payload,
-                    'respuesta_completa' => $sunatResult,
-                    'respuesta_api' => $sunatResult['response'] ?? null,
-                    'documento' => $sunatResult['response']['data'] ?? null,
-                ]);
-                exit;
+                if (!($sunatResponse['success'] ?? false)) {
+                    $sale->sunat_status = 'ERROR';
+                    $sale->save();
 
-                $sale->sunat_document_id = $sunatData['_id'] ?? $sunatData['documentId'] ?? $sunatData['id'] ?? null;
+                    $response['success'] = true;
+                    $response['data'] = $sale->fresh();
+                    $response['message'] = 'Venta registrada, pero no se pudo emitir el comprobante: ' . ($sunatResponse['message'] ?? 'Error desconocido.');
+                    return $response;
+                }
 
-                $sale->sunat_status = $sunatData['status'] ?? 'ERROR';
+                $sunatData = $sunatResponse['data'] ?? [];
+
+                if (empty($sunatData['documentId'])) {
+                    $sale->sunat_status = 'ERROR';
+                    $sale->save();
+
+                    $response['success'] = true;
+                    $response['data'] = $sale->fresh();
+                    $response['message'] = 'Venta registrada, pero SUNAT no devolvió el documentId.';
+
+                    return $response;
+                }
+
+                $sale->sunat_document_id = $sunatData['documentId'] ?? null;
+                $sale->sunat_status = $sunatData['status'] ?? 'PENDIENTE';
                 $sale->voucher_series = $sunatData['serie'] ?? $sale->voucher_series;
                 $sale->voucher_number = $sunatData['number'] ?? $sale->voucher_number;
+                $sale->pdf_58mm = $sunatData['pdf']['58mm'] ?? null;
+                $sale->pdf_80mm = $sunatData['pdf']['80mm'] ?? null;
+                $sale->pdf_a5 = $sunatData['pdf']['A5'] ?? null;
+                $sale->pdf_a4 = $sunatData['pdf']['A4'] ?? null;
                 $sale->save();
             }
 
             $response['success'] = true;
-            $response['data'] = $sale;
+            $response['data'] = $sale->fresh();
             $response['message'] = 'Venta registrada correctamente.';
         } catch (\Exception $e) {
             DB::rollBack();
@@ -402,6 +419,14 @@ class SaleDow
             default => null,
         };
 
+        $tipoDocumentoCliente = match ($customer->document_type) {
+            'DNI' => '1',
+            'RUC' => '6',
+            'CE' => '4',
+            'PASSPORT', 'PASAPORTE' => '7',
+            default => '0',
+        };
+
         if (!$tipoDocumento) {
             throw new \Exception('El tipo de comprobante no se envía a SUNAT.');
         }
@@ -421,7 +446,7 @@ class SaleDow
                 'direccion' => $company->fiscal_address,
             ],
             'cliente' => [
-                'tipo_documento' => $customer->document_type,
+                'tipo_documento' => $tipoDocumentoCliente,
                 'numero_documento' => $customer->document_number,
                 'nombre' => $customer->name,
                 'direccion' => $customer->address ?? '-',
