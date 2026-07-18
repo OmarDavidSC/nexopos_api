@@ -32,6 +32,7 @@ class SaleDow
             $customer_id = isset($input['customer_id']) && $input['customer_id'] !== '' ? (int)$input['customer_id'] : null;
             $branch_id = isset($input['branch_id']) && $input['branch_id'] !== '' ? (int)$input['branch_id'] : null;
             $status = $input['status'] ?? '';
+            $sunat_status = $input['sunat_status'] ?? '';
             $payment_method = $input['payment_method'] ?? '';
 
             $query = Sale::with([
@@ -66,6 +67,10 @@ class SaleDow
                 $query->where('status', $status);
             }
 
+            if ($sunat_status !== '') {
+                $query->where('sunat_status', $sunat_status);
+            }
+
             if ($payment_method !== '') {
                 $query->where('payment_method', $payment_method);
             }
@@ -92,6 +97,11 @@ class SaleDow
                     'items_count' => $item->details_count,
                     'status' => $item->status,
                     'status_label' => FG::getStatusLabel($item->status),
+                    'sunat_status' => $item->sunat_status,
+                    // 'pdf_58mm' =>  $item->pdf_58mm,
+                    // 'pdf_80mm' => $item->pdf_80mm,
+                    // 'pdf_a5' => $item->pdf_a5,
+                    // 'pdf_a4' => $item->pdf_a4
                 ];
             });
 
@@ -207,6 +217,11 @@ class SaleDow
                 throw new \Exception("La venta no fue encontrada.");
             }
 
+            if (!empty($sale->sunat_document_id)) {
+                $this->updateSunatStatus($sale);
+                $sale->refresh();
+            }
+
             $response['success'] = true;
             $response['data'] = [
                 'sale' => [
@@ -218,11 +233,17 @@ class SaleDow
                     'voucher_series' => $sale->voucher_series,
                     'voucher_number' => $sale->voucher_number,
                     'payment_method' => $sale->payment_method,
+                    'sunat_document_id' => $sale->sunat_document_id,
+                    'sunat_status' => $sale->sunat_status,
                     'subtotal' => $sale->subtotal,
                     'tax' => $sale->tax,
                     'discount' => $sale->discount,
                     'total' => $sale->total,
                     'status' => $sale->status,
+                    'pdf_58mm' =>  $sale->pdf_58mm,
+                    'pdf_80mm' => $sale->pdf_80mm,
+                    'pdf_a5' => $sale->pdf_a5,
+                    'pdf_a4' => $sale->pdf_a4
                 ],
                 'details' => $sale->details->map(function ($item) {
                     return [
@@ -233,7 +254,7 @@ class SaleDow
                         'quantity' => $item->quantity,
                         'sale_price' => $item->sale_price,
                         'discount' => $item->discount,
-                        'subtotal' => $item->subtotal
+                        'subtotal' => $item->subtotal,
                     ];
                 })
             ];
@@ -458,5 +479,41 @@ class SaleDow
             ],
             'items' => $items,
         ];
+    }
+
+    private function updateSunatStatus(Sale $sale): void
+    {
+        if (empty($sale->sunat_document_id)) {
+            return;
+        }
+
+        try {
+            $sunatService = new SunatApiService();
+            $sunatResult = $sunatService->document($sale->sunat_document_id);
+            if (!($sunatResult['response']['success'] ?? false)) {
+                return;
+            }
+
+            $sunatData = $sunatResult['response']['data'] ?? [];
+            // var_dump($sunatData);exit;
+            $pdf = $sunatData['pdf'] ?? [];
+
+            $newStatus = strtoupper(trim((string)($sunatData['status'] ?? $sale->sunat_status)));
+            $allowedStatuses = ['NO_ENVIADO', 'PENDIENTE', 'ACEPTADO', 'RECHAZADO', 'ERROR'];
+
+            if (in_array($newStatus, $allowedStatuses, true)) {
+                $sale->sunat_status = $newStatus;
+            }
+
+            $sale->voucher_series = $sunatData['serie'] ?? $sale->voucher_series;
+            $sale->voucher_number = $sunatData['number'] ?? $sale->voucher_number;
+            $sale->pdf_58mm = $pdf['58mm'] ?? $sunatData['pdf_58mm'] ?? $sale->pdf_58mm;
+            $sale->pdf_80mm = $pdf['80mm'] ?? $sunatData['pdf_80mm'] ?? $sale->pdf_80mm;
+            $sale->pdf_a5 = $pdf['A5'] ?? $sunatData['pdf_a5'] ?? $sale->pdf_a5;
+            $sale->pdf_a4 = $pdf['A4'] ?? $sunatData['pdf_a4'] ?? $sale->pdf_a4;
+            $sale->save();
+        } catch (\Throwable $e) {
+            error_log('Error consultando estado SUNAT de la venta ' . $sale->id . ': ' . $e->getMessage());
+        }
     }
 }

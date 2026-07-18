@@ -96,4 +96,55 @@ class SunatApiService
             'response' => $data,
         ];
     }
+
+    // public function getDocument(string $documentId): array
+    // {
+    //     if (empty($documentId)) {
+    //         throw new \Exception('El identificador SUNAT del documento no está disponible.');
+    //     }
+
+    //     $baseUrl = rtrim($_ENV['URL_API_SUNAT'] ?? '', '/');
+
+    //     if (empty($baseUrl)) {
+    //         throw new \Exception('La URL del módulo SUNAT no está configurada.');
+    //     }
+
+    //     $url = $baseUrl . '/api/sunat/' . urlencode($documentId) . '/document';
+
+    //     $curl = curl_init();
+
+    //     curl_setopt_array($curl, [
+    //         CURLOPT_URL => $url,
+    //         CURLOPT_RETURNTRANSFER => true,
+    //         CURLOPT_FOLLOWLOCATION => true,
+    //         CURLOPT_CONNECTTIMEOUT => 5,
+    //         CURLOPT_TIMEOUT => 15,
+    //         CURLOPT_HTTPHEADER => [
+    //             'Accept: application/json'
+    //         ]
+    //     ]);
+
+    //     $body = curl_exec($curl);
+    //     $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+    //     $curlError = curl_error($curl);
+
+    //     curl_close($curl);
+
+    //     if ($body === false || !empty($curlError)) {
+    //         throw new \Exception('No se pudo conectar con el módulo SUNAT: ' . $curlError);
+    //     }
+
+    //     $body = preg_replace('/^\xEF\xBB\xBF/', '', trim($body));
+    //     $response = json_decode($body, true);
+
+    //     if (json_last_error() !== JSON_ERROR_NONE) {
+    //         throw new \Exception('El módulo SUNAT devolvió una respuesta inválida.');
+    //     }
+
+    //     if ($httpCode < 200 || $httpCode >= 300) {
+    //         throw new \Exception($response['message'] ?? 'No se pudo consultar el documento en SUNAT.');
+    //     }
+
+    //     return $response;
+    // }
 }
