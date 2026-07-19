@@ -3,9 +3,7 @@
 namespace App\Dows;
 
 use App\Middlewares\Application;
-use App\Models\Purchase;
 use App\Models\SaleDetail;
-use Illuminate\Database\Capsule\Manager as DB;
 use App\Utilities\FG;
 use Carbon\Carbon;
 
@@ -20,8 +18,8 @@ class ReportProfitDow
             $input = $request->getParsedBody();
             $companyId = (int)Application::getItem('company_id');
 
-            $dateStart = !empty($params['date_start']) ? $params['date_start'] : Carbon::now()->startOfMonth()->format('Y-m-d');
-            $dateEnd = !empty($params['date_end']) ? $params['date_end'] : Carbon::now()->format('Y-m-d');
+            $dateStart = !empty($input['date_start']) ? $input['date_start'] : Carbon::now()->startOfMonth()->format('Y-m-d');
+            $dateEnd = !empty($input['date_end']) ? $input['date_end'] : Carbon::now()->format('Y-m-d');
 
             $this->validateDateRange($dateStart, $dateEnd);
 
