@@ -370,12 +370,15 @@ class SaleDow
 
     private function processSaleDetail(Sale $sale, array $item, int $company_id, int $user_id)
     {
-        $product = Product::find($item['product_id']);
+        $product = Product::where('company_id', $company_id)
+            ->where('id', $item['product_id'])
+            ->whereNull('deleted_at')
+            ->first();
         if (!$product) {
             throw new \Exception("Producto no encontrado.");
         }
 
-        $this->createSaleDetail($sale, $item);
+        $this->createSaleDetail($sale, $item, $product);
         $result = ProductStockService::decrease($company_id, $sale->branch_id, $product->id, $item['quantity']);
         InventoryService::createMovement(
             $company_id,
@@ -392,15 +395,28 @@ class SaleDow
         );
     }
 
-    private function createSaleDetail(Sale $sale, array $item)
+    private function createSaleDetail(Sale $sale, array $item, Product $product)
     {
+
+        $quantity = (float)  $item['quantity'];
+        $salePrice  = (float)  $item['salePrice '];
+        $discount = (float)  $item['discount'];
+        $subtotal = (float)  $item['subtotal'];
+
+        $unitCost = (float)$product->purchase_price;
+        $totalCost = $quantity * $unitCost;
+        $profit = $subtotal - $totalCost;
+
         $detail = new SaleDetail();
         $detail->sale_id = $sale->id;
-        $detail->product_id = $item['product_id'];
-        $detail->quantity = $item['quantity'];
-        $detail->sale_price = $item['sale_price'];
-        $detail->discount = $item['discount'] ?? 0;
-        $detail->subtotal = $item['subtotal'];
+        $detail->product_id = $product->id;
+        $detail->quantity = $quantity;
+        $detail->sale_price = $salePrice;
+        $detail->unit_cost = round($unitCost, 2);
+        $detail->total_cost = round($totalCost, 2);
+        $detail->discount = round($discount, 2);
+        $detail->subtotal = round($subtotal, 2);
+        $detail->profit = round($profit, 2);
         $detail->save();
     }
 

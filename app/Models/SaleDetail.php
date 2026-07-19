@@ -18,6 +18,9 @@ class SaleDetail extends Model
         'sale_price',
         'discount',
         'subtotal',
+        'unit_costo',
+        'total_cost',
+        'profit'
     ];
 
     public function sale()
