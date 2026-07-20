@@ -125,34 +125,49 @@ class SaleDow
     public function store($request)
     {
         $response = FG::responseDefault();
-        DB::beginTransaction();
+
         try {
+            DB::beginTransaction();
+
             $input = $request->getParsedBody();
             $company_id = Application::getItem('company_id');
             $branch_id = Application::getItem('branch_id');
             $user_id = Application::getItem('user_id');
 
             $this->validateStore($input);
+
             $sale = $this->createSale($input, $company_id, $user_id, $branch_id);
             $details = json_decode($input['details'], true);
+
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                throw new \Exception('El detalle de la venta no contiene un JSON válido.');
+            }
+
+            if (empty($details)) {
+                throw new \Exception('Debe agregar al menos un producto.');
+            }
 
             foreach ($details as $detail) {
                 $this->processSaleDetail($sale, $detail, $company_id, $user_id);
             }
             DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            $response['success'] = false;
+            $response['message'] = $e->getMessage();
+            return $response;
+        }
 
-            if (in_array($sale->voucher_type, ['BOLETA', 'FACTURA'], true)) {
+        if (in_array($sale->voucher_type, ['BOLETA', 'FACTURA'], true)) {
+            try {
                 $payload = $this->buildSunatPayload($sale);
-
                 $sunatService = new SunatApiService();
                 $sunatResult = $sunatService->emit($payload);
-
                 $sunatResponse = $sunatResult['response'] ?? [];
 
                 if (!($sunatResponse['success'] ?? false)) {
                     $sale->sunat_status = 'ERROR';
                     $sale->save();
-
                     $response['success'] = true;
                     $response['data'] = $sale->fresh();
                     $response['message'] = 'Venta registrada, pero no se pudo emitir el comprobante: ' . ($sunatResponse['message'] ?? 'Error desconocido.');
@@ -162,17 +177,10 @@ class SaleDow
                 $sunatData = $sunatResponse['data'] ?? [];
 
                 if (empty($sunatData['documentId'])) {
-                    $sale->sunat_status = 'ERROR';
-                    $sale->save();
-
-                    $response['success'] = true;
-                    $response['data'] = $sale->fresh();
-                    $response['message'] = 'Venta registrada, pero SUNAT no devolvió el documentId.';
-
-                    return $response;
+                    throw new \Exception('SUNAT no devolvió el documentId.');
                 }
 
-                $sale->sunat_document_id = $sunatData['documentId'] ?? null;
+                $sale->sunat_document_id = $sunatData['documentId'];
                 $sale->sunat_status = $sunatData['status'] ?? 'PENDIENTE';
                 $sale->voucher_series = $sunatData['serie'] ?? $sale->voucher_series;
                 $sale->voucher_number = $sunatData['number'] ?? $sale->voucher_number;
@@ -181,16 +189,19 @@ class SaleDow
                 $sale->pdf_a5 = $sunatData['pdf']['A5'] ?? null;
                 $sale->pdf_a4 = $sunatData['pdf']['A4'] ?? null;
                 $sale->save();
+            } catch (\Exception $e) {
+                $sale->sunat_status = 'ERROR';
+                $sale->save();
+                $response['success'] = true;
+                $response['data'] = $sale->fresh();
+                $response['message'] = 'Venta registrada, pero no se pudo emitir el comprobante: ' . $e->getMessage();
+                return $response;
             }
-
-            $response['success'] = true;
-            $response['data'] = $sale->fresh();
-            $response['message'] = 'Venta registrada correctamente.';
-        } catch (\Exception $e) {
-            DB::rollBack();
-            $response['success'] = false;
-            $response['message'] = $e->getMessage();
         }
+
+        $response['success'] = true;
+        $response['data'] = $sale->fresh();
+        $response['message'] = 'Venta registrada correctamente.';
         return $response;
     }
 
@@ -399,13 +410,30 @@ class SaleDow
     {
 
         $quantity = (float)  $item['quantity'];
-        $salePrice  = (float)  $item['salePrice '];
+        $salePrice  = (float)  $item['sale_price'];
         $discount = (float)  $item['discount'];
-        $subtotal = (float)  $item['subtotal'];
 
+        if ($quantity <= 0) {
+            throw new \Exception("La cantidad del producto {$product->name} debe ser mayor a cero.");
+        }
+
+        if ($salePrice <= 0) {
+            throw new \Exception("El precio del producto {$product->name} debe ser mayor a cero.");
+        }
+
+        if ($discount < 0) {
+            throw new \Exception("El descuento no puede ser negativo.");
+        }
+
+        $grossAmount = round($quantity * $salePrice, 2);
+        if ($discount > $grossAmount) {
+            throw new \Exception("El descuento no puede superar el importe del producto.");
+        }
+
+        $subtotal = round($grossAmount - $discount, 2);
         $unitCost = (float)$product->purchase_price;
-        $totalCost = $quantity * $unitCost;
-        $profit = $subtotal - $totalCost;
+        $totalCost = round($quantity * $unitCost, 2);
+        $profit = round($subtotal - $totalCost, 2);
 
         $detail = new SaleDetail();
         $detail->sale_id = $sale->id;
@@ -413,10 +441,10 @@ class SaleDow
         $detail->quantity = $quantity;
         $detail->sale_price = $salePrice;
         $detail->unit_cost = round($unitCost, 2);
-        $detail->total_cost = round($totalCost, 2);
+        $detail->total_cost = $totalCost;
         $detail->discount = round($discount, 2);
-        $detail->subtotal = round($subtotal, 2);
-        $detail->profit = round($profit, 2);
+        $detail->subtotal = $subtotal;
+        $detail->profit = $profit;
         $detail->save();
     }
 
@@ -450,11 +478,27 @@ class SaleDow
         $company = $sale->company;
         $customer = $sale->customer;
 
+        if (!$company) {
+            throw new \Exception('No se encontró la empresa de la venta.');
+        }
+
+        if (!$customer) {
+            throw new \Exception('No se encontró el cliente de la venta.');
+        }
+
+        if ($sale->details->isEmpty()) {
+            throw new \Exception('La venta no contiene productos para emitir a SUNAT.');
+        }
+
         $tipoDocumento = match ($sale->voucher_type) {
             'FACTURA' => '01',
             'BOLETA' => '03',
             default => null,
         };
+
+        if (!$tipoDocumento) {
+            throw new \Exception('El tipo de comprobante no se envía a SUNAT.');
+        }
 
         $tipoDocumentoCliente = match ($customer->document_type) {
             'DNI' => '1',
@@ -463,6 +507,10 @@ class SaleDow
             'PASSPORT', 'PASAPORTE' => '7',
             default => '0',
         };
+
+        if ($tipoDocumento === '01' && $tipoDocumentoCliente !== '6') {
+            throw new \Exception('Para emitir una factura el cliente debe tener RUC.');
+        }
 
         if (!$tipoDocumento) {
             throw new \Exception('El tipo de comprobante no se envía a SUNAT.');
