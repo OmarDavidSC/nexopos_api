@@ -175,14 +175,22 @@ CREATE TABLE IF NOT EXISTS `categories` (
   PRIMARY KEY (`id`),
   KEY `idx_categories_company` (`company_id`),
   CONSTRAINT `fk_categories_company` FOREIGN KEY (`company_id`) REFERENCES `companies` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Volcando datos para la tabla db_nexopos_app.categories: ~3 rows (aproximadamente)
 DELETE FROM `categories`;
 INSERT INTO `categories` (`id`, `company_id`, `name`, `description`, `status`, `created_at`, `updated_at`, `deleted_at`) VALUES
 	(1, 4, 'Categoria de prueba', NULL, 1, '2026-07-07 09:28:19', '2026-07-07 09:28:19', NULL),
 	(2, 4, 'Categoria de prueba 2', NULL, 1, '2026-07-07 10:50:06', '2026-07-07 10:50:20', NULL),
-	(3, 4, 'Categoria de prueba 3', NULL, 1, '2026-07-07 10:50:26', '2026-07-07 10:50:26', NULL);
+	(3, 4, 'Categoria de prueba 3', NULL, 1, '2026-07-07 10:50:26', '2026-07-07 10:50:26', NULL),
+	(4, 4, 'Fierros', NULL, 1, '2026-07-19 03:12:08', '2026-07-19 03:12:08', NULL),
+	(5, 4, 'Plasticos', NULL, 1, '2026-07-19 03:12:14', '2026-07-19 03:12:14', NULL),
+	(6, 4, 'Cintas', NULL, 1, '2026-07-19 03:12:18', '2026-07-19 03:12:18', NULL),
+	(7, 4, 'Movibles', NULL, 1, '2026-07-19 03:12:27', '2026-07-19 03:12:27', NULL),
+	(8, 4, 'Cementos', NULL, 1, '2026-07-19 03:12:39', '2026-07-19 03:12:39', NULL),
+	(9, 4, 'Tubos', NULL, 1, '2026-07-19 03:12:52', '2026-07-19 03:12:52', NULL),
+	(10, 4, 'Herramientas', NULL, 1, '2026-07-19 03:13:03', '2026-07-19 03:13:03', NULL),
+	(11, 4, 'Prueba 11', NULL, 1, '2026-07-19 03:13:57', '2026-07-19 03:13:57', NULL);
 
 -- Volcando estructura para tabla db_nexopos_app.companies
 CREATE TABLE IF NOT EXISTS `companies` (
@@ -222,7 +230,7 @@ CREATE TABLE IF NOT EXISTS `companies` (
 -- Volcando datos para la tabla db_nexopos_app.companies: ~2 rows (aproximadamente)
 DELETE FROM `companies`;
 INSERT INTO `companies` (`id`, `name`, `ruc`, `business_name`, `trade_name`, `fiscal_address`, `sunat_persona_id`, `sunat_persona_token`, `country_code`, `currency_code`, `currency_symbol`, `currency_name`, `favicon_id`, `logo_id`, `terms_conditions`, `privacy_policies`, `host`, `host_client`, `status`, `mailer_name`, `mailer_password`, `mailer_username`, `mailer_host`, `created_at`, `updated_at`, `deleted_at`) VALUES
-	(4, 'C. Software Solutions', '10626765411', 'Omar David Serquen Coronado', NULL, 'Pueblo Viejo Pacora', '6a2c1d890d8ed4002950262c', 'DEV_iw0a1WcG5oczrCgcpgVthSNjEtjauCnJBTHClqChcEmrHRqFxa6opILGOjyixHdi', 'PE', 'PEN', 'S/', 'Sol peruano', NULL, NULL, '', '', NULL, NULL, 1, NULL, NULL, NULL, NULL, '2026-03-18 15:48:30', '2026-07-17 16:39:07', NULL),
+	(4, 'C. Software Solutions', '10626765411', 'Omar David Serquen Coronado', NULL, 'Pueblo Viejo Pacora', '6a2c1d890d8ed4002950262c', 'DEV_iw0a1WcG5oczrCgcpgVthSNjEtjauCnJBTHClqChcEmrHRqFxa6opILGOjyixHdi', 'PE', 'PEN', 'S/', 'Sol peruano', 1387, 1388, '', '', NULL, NULL, 1, NULL, NULL, NULL, NULL, '2026-03-18 15:48:30', '2026-07-19 03:15:23', NULL),
 	(5, 'La Positiva', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'omar davis sequen coonad', NULL, NULL, NULL, 1, NULL, NULL, NULL, NULL, '2026-03-18 15:48:57', '2026-03-20 13:28:52', NULL);
 
 -- Volcando estructura para tabla db_nexopos_app.company_settings
@@ -269,7 +277,7 @@ CREATE TABLE IF NOT EXISTS `customers` (
   CONSTRAINT `fk_customer_company` FOREIGN KEY (`company_id`) REFERENCES `companies` (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Volcando datos para la tabla db_nexopos_app.customers: ~6 rows (aproximadamente)
+-- Volcando datos para la tabla db_nexopos_app.customers: ~7 rows (aproximadamente)
 DELETE FROM `customers`;
 INSERT INTO `customers` (`id`, `company_id`, `document_type`, `document_number`, `name`, `phone`, `email`, `address`, `status`, `created_at`, `updated_at`, `deleted_at`) VALUES
 	(1, 4, 'DNI', '62676541', 'Omar David Serquen Coronado', '927350176', 'serquen@gmail.com', 'Calle san pablo - pueblo viejo', 1, '2026-07-08 14:30:48', '2026-07-08 14:30:48', NULL),
@@ -304,9 +312,9 @@ CREATE TABLE IF NOT EXISTS `inventory_movements` (
   CONSTRAINT `fk_inventory_company` FOREIGN KEY (`company_id`) REFERENCES `companies` (`id`),
   CONSTRAINT `fk_inventory_product` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`),
   CONSTRAINT `fk_inventory_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=40 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=50 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Volcando datos para la tabla db_nexopos_app.inventory_movements: ~10 rows (aproximadamente)
+-- Volcando datos para la tabla db_nexopos_app.inventory_movements: ~42 rows (aproximadamente)
 DELETE FROM `inventory_movements`;
 INSERT INTO `inventory_movements` (`id`, `company_id`, `product_id`, `user_id`, `branch_id`, `type`, `quantity`, `stock_before`, `stock_after`, `reference_type`, `reference_id`, `observation`, `created_at`, `updated_at`, `deleted_at`) VALUES
 	(1, 4, 4, 38, 1, 'ADJUSTMENT_OUT', 1.00, 50.00, 49.00, 'PURCHASE_CANCEL', 10, 'Salida por cancelación de compra', '2026-07-10 11:50:40', '2026-07-10 11:50:40', NULL),
@@ -346,7 +354,17 @@ INSERT INTO `inventory_movements` (`id`, `company_id`, `product_id`, `user_id`, 
 	(36, 4, 4, 38, 1, 'SALE', 1.00, 29.00, 28.00, 'SALE', 40, 'Salida por venta', '2026-07-17 18:59:03', '2026-07-17 18:59:03', NULL),
 	(37, 4, 5, 38, 1, 'SALE', 1.00, 74.00, 73.00, 'SALE', 40, 'Salida por venta', '2026-07-17 18:59:03', '2026-07-17 18:59:03', NULL),
 	(38, 4, 5, 38, 1, 'SALE', 1.00, 73.00, 72.00, 'SALE', 41, 'Salida por venta', '2026-07-17 19:03:00', '2026-07-17 19:03:00', NULL),
-	(39, 4, 4, 38, 1, 'SALE', 1.00, 28.00, 27.00, 'SALE', 41, 'Salida por venta', '2026-07-17 19:03:00', '2026-07-17 19:03:00', NULL);
+	(39, 4, 4, 38, 1, 'SALE', 1.00, 28.00, 27.00, 'SALE', 41, 'Salida por venta', '2026-07-17 19:03:00', '2026-07-17 19:03:00', NULL),
+	(40, 4, 5, 38, 1, 'SALE', 1.00, 72.00, 71.00, 'SALE', 43, 'Salida por venta', '2026-07-18 09:54:38', '2026-07-18 09:54:38', NULL),
+	(41, 4, 4, 38, 1, 'SALE', 1.00, 27.00, 26.00, 'SALE', 43, 'Salida por venta', '2026-07-18 09:54:38', '2026-07-18 09:54:38', NULL),
+	(42, 4, 5, 38, 1, 'SALE', 1.00, 71.00, 70.00, 'SALE', 43, 'Salida por venta', '2026-07-18 09:54:38', '2026-07-18 09:54:38', NULL),
+	(43, 4, 4, 38, 1, 'SALE', 1.00, 26.00, 25.00, 'SALE', 44, 'Salida por venta', '2026-07-18 09:55:41', '2026-07-18 09:55:41', NULL),
+	(44, 4, 5, 38, 1, 'SALE', 1.00, 70.00, 69.00, 'SALE', 45, 'Salida por venta', '2026-07-18 11:30:11', '2026-07-18 11:30:11', NULL),
+	(45, 4, 5, 38, 1, 'SALE', 1.00, 69.00, 68.00, 'SALE', 45, 'Salida por venta', '2026-07-18 11:30:11', '2026-07-18 11:30:11', NULL),
+	(46, 4, 4, 38, 1, 'SALE', 1.00, 25.00, 24.00, 'SALE', 46, 'Salida por venta', '2026-07-19 01:11:48', '2026-07-19 01:11:48', NULL),
+	(47, 4, 5, 38, 1, 'SALE', 1.00, 68.00, 67.00, 'SALE', 47, 'Salida por venta', '2026-07-19 01:12:53', '2026-07-19 01:12:53', NULL),
+	(48, 4, 1, 41, 4, 'SALE', 1.00, 20.00, 19.00, 'SALE', 48, 'Salida por venta', '2026-07-19 01:46:42', '2026-07-19 01:46:42', NULL),
+	(49, 4, 5, 38, 1, 'SALE', 1.00, 67.00, 66.00, 'SALE', 49, 'Salida por venta', '2026-07-19 03:01:48', '2026-07-19 03:01:48', NULL);
 
 -- Volcando estructura para tabla db_nexopos_app.notifications
 CREATE TABLE IF NOT EXISTS `notifications` (
@@ -416,16 +434,22 @@ CREATE TABLE IF NOT EXISTS `products` (
   CONSTRAINT `fk_products_company` FOREIGN KEY (`company_id`) REFERENCES `companies` (`id`),
   CONSTRAINT `fk_products_image` FOREIGN KEY (`image_id`) REFERENCES `storage_files` (`id`),
   CONSTRAINT `fk_products_unit` FOREIGN KEY (`unit_id`) REFERENCES `units` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Volcando datos para la tabla db_nexopos_app.products: ~5 rows (aproximadamente)
 DELETE FROM `products`;
 INSERT INTO `products` (`id`, `company_id`, `category_id`, `brand_id`, `unit_id`, `image_id`, `code`, `barcode`, `name`, `description`, `purchase_price`, `sale_price`, `status`, `created_at`, `updated_at`, `deleted_at`) VALUES
-	(1, 4, 1, 1, 1, NULL, 'JNDR3', NULL, 'POLOO', NULL, 30.00, 30.00, 1, '2026-07-07 11:03:32', '2026-07-10 11:48:02', NULL),
+	(1, 4, 1, 1, 1, NULL, 'JNDR3', NULL, 'POLOO', NULL, 30.00, 60.00, 1, '2026-07-07 11:03:32', '2026-07-19 01:46:17', NULL),
 	(3, 4, 1, 3, 1, NULL, 'JNDR3tr', NULL, 'POLOO 1', NULL, 30.00, 30.00, 1, '2026-07-07 11:03:32', '2026-07-10 11:47:54', NULL),
 	(4, 4, 2, 2, 2, NULL, 'N8274B', NULL, 'POLO BAGE DE PRUEBA', NULL, 30.00, 50.00, 1, '2026-07-07 13:27:26', '2026-07-10 11:47:47', NULL),
 	(5, 4, 1, 2, 3, NULL, '00283', NULL, 'Casaca Bage', NULL, 30.00, 90.00, 1, '2026-07-09 22:15:41', '2026-07-10 11:47:40', NULL),
-	(6, 4, 3, 2, 1, NULL, '0909', NULL, 'POLO BLANCO', NULL, 30.00, 40.00, 1, '2026-07-10 17:16:00', '2026-07-10 17:16:00', NULL);
+	(6, 4, 3, 2, 1, NULL, '0909', NULL, 'POLO BLANCO', NULL, 30.00, 40.00, 1, '2026-07-10 17:16:00', '2026-07-10 17:16:00', NULL),
+	(7, 4, 2, 2, 1, NULL, '42323', NULL, 'Carretilla Blanco', NULL, 40.00, 50.00, 1, '2026-07-19 03:08:10', '2026-07-19 03:08:10', NULL),
+	(8, 4, 2, 2, 1, NULL, 'r3534', NULL, 'Varilla de 1/2', NULL, 50.00, 70.00, 1, '2026-07-19 03:08:41', '2026-07-19 03:08:41', NULL),
+	(9, 4, 2, 2, 1, NULL, '423423', NULL, 'Varilla 3/4', NULL, 30.00, 60.00, 1, '2026-07-19 03:08:58', '2026-07-19 03:08:58', NULL),
+	(10, 4, 1, 2, 1, NULL, '2424', NULL, 'Varilla 5/8', NULL, 60.00, 100.00, 1, '2026-07-19 03:09:25', '2026-07-19 03:09:25', NULL),
+	(11, 4, 2, 2, 1, NULL, '2343', NULL, 'Clavo de media', NULL, 5.00, 10.00, 1, '2026-07-19 03:09:53', '2026-07-19 03:09:53', NULL),
+	(12, 4, 2, 2, 1, NULL, '4234', NULL, 'Tubo de Media', NULL, 30.00, 50.00, 1, '2026-07-19 03:10:11', '2026-07-19 03:10:11', NULL);
 
 -- Volcando estructura para tabla db_nexopos_app.product_stocks
 CREATE TABLE IF NOT EXISTS `product_stocks` (
@@ -440,22 +464,32 @@ CREATE TABLE IF NOT EXISTS `product_stocks` (
   `deleted_at` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `branch_id` (`branch_id`,`product_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=36 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=46 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Volcando datos para la tabla db_nexopos_app.product_stocks: ~11 rows (aproximadamente)
 DELETE FROM `product_stocks`;
 INSERT INTO `product_stocks` (`id`, `company_id`, `branch_id`, `product_id`, `current_stock`, `minimum_stock`, `created_at`, `updated_at`, `deleted_at`) VALUES
 	(25, 4, 4, 5, 9.00, 5.00, '2026-07-10 17:52:31', '2026-07-10 17:55:07', NULL),
 	(26, 4, 4, 6, 19.00, 5.00, '2026-07-10 17:52:43', '2026-07-10 17:53:58', NULL),
-	(27, 4, 1, 4, 27.00, 10.00, '2026-07-10 17:52:54', '2026-07-17 19:03:00', NULL),
+	(27, 4, 1, 4, 24.00, 10.00, '2026-07-10 17:52:54', '2026-07-19 01:11:48', NULL),
 	(28, 4, 2, 1, 50.00, 10.00, '2026-07-10 17:53:03', '2026-07-10 17:53:03', NULL),
 	(29, 4, 4, 4, 0.00, 0.00, '2026-07-10 17:53:24', '2026-07-10 17:53:24', NULL),
-	(30, 4, 4, 1, 20.00, 3.00, '2026-07-10 17:53:24', '2026-07-10 17:55:44', NULL),
+	(30, 4, 4, 1, 19.00, 3.00, '2026-07-10 17:53:24', '2026-07-19 01:46:42', NULL),
 	(31, 4, 4, 3, 0.00, 0.00, '2026-07-10 17:53:24', '2026-07-10 17:53:24', NULL),
-	(32, 4, 1, 5, 72.00, 0.00, '2026-07-10 23:38:29', '2026-07-17 19:03:00', NULL),
+	(32, 4, 1, 5, 66.00, 0.00, '2026-07-10 23:38:29', '2026-07-19 03:01:48', NULL),
 	(33, 4, 1, 6, 0.00, 0.00, '2026-07-10 23:38:29', '2026-07-10 23:38:29', NULL),
 	(34, 4, 1, 1, 0.00, 0.00, '2026-07-10 23:38:29', '2026-07-10 23:38:29', NULL),
-	(35, 4, 1, 3, 0.00, 0.00, '2026-07-10 23:38:29', '2026-07-17 18:22:29', NULL);
+	(35, 4, 1, 3, 0.00, 0.00, '2026-07-10 23:38:29', '2026-07-17 18:22:29', NULL),
+	(36, 4, 2, 7, 0.00, 0.00, '2026-07-19 03:20:20', '2026-07-19 03:20:20', NULL),
+	(37, 4, 2, 5, 0.00, 0.00, '2026-07-19 03:20:20', '2026-07-19 03:20:20', NULL),
+	(38, 4, 2, 11, 0.00, 0.00, '2026-07-19 03:20:20', '2026-07-19 03:20:20', NULL),
+	(39, 4, 2, 4, 0.00, 0.00, '2026-07-19 03:20:20', '2026-07-19 03:20:20', NULL),
+	(40, 4, 2, 6, 0.00, 0.00, '2026-07-19 03:20:20', '2026-07-19 03:20:20', NULL),
+	(41, 4, 2, 3, 0.00, 0.00, '2026-07-19 03:20:20', '2026-07-19 03:20:20', NULL),
+	(42, 4, 2, 12, 0.00, 0.00, '2026-07-19 03:20:20', '2026-07-19 03:20:20', NULL),
+	(43, 4, 2, 9, 0.00, 0.00, '2026-07-19 03:20:20', '2026-07-19 03:20:20', NULL),
+	(44, 4, 2, 10, 0.00, 0.00, '2026-07-19 03:20:20', '2026-07-19 03:20:20', NULL),
+	(45, 4, 2, 8, 0.00, 0.00, '2026-07-19 03:20:20', '2026-07-19 03:20:20', NULL);
 
 -- Volcando estructura para tabla db_nexopos_app.purchases
 CREATE TABLE IF NOT EXISTS `purchases` (
@@ -586,9 +620,9 @@ CREATE TABLE IF NOT EXISTS `sales` (
   CONSTRAINT `fk_sale_company` FOREIGN KEY (`company_id`) REFERENCES `companies` (`id`),
   CONSTRAINT `fk_sale_customer` FOREIGN KEY (`customer_id`) REFERENCES `customers` (`id`),
   CONSTRAINT `fk_sale_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=42 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=50 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla db_nexopos_app.sales: ~18 rows (aproximadamente)
+-- Volcando datos para la tabla db_nexopos_app.sales: ~25 rows (aproximadamente)
 DELETE FROM `sales`;
 INSERT INTO `sales` (`id`, `company_id`, `customer_id`, `user_id`, `branch_id`, `sale_date`, `voucher_type`, `voucher_series`, `voucher_number`, `sunat_document_id`, `sunat_status`, `payment_method`, `subtotal`, `tax`, `discount`, `total`, `status`, `pdf_58mm`, `pdf_80mm`, `pdf_a5`, `pdf_a4`, `created_at`, `updated_at`, `deleted_at`) VALUES
 	(19, 4, 3, 41, 4, '2026-07-10 00:00:00', 'FACTURA', 'FA', '001', NULL, 'NO_ENVIADO', 'CASH', 40.00, 0.00, 0.00, 40.00, 'COMPLETED', NULL, NULL, NULL, NULL, '2026-07-10 17:53:58', '2026-07-10 17:53:58', NULL),
@@ -604,15 +638,22 @@ INSERT INTO `sales` (`id`, `company_id`, `customer_id`, `user_id`, `branch_id`, 
 	(30, 4, 2, 38, 1, '2026-07-17 00:00:00', 'FACTURA', 'FA', '004', NULL, 'NO_ENVIADO', 'CASH', 30.00, 0.00, 0.00, 30.00, 'COMPLETED', NULL, NULL, NULL, NULL, '2026-07-17 17:05:16', '2026-07-17 17:05:16', NULL),
 	(31, 4, 6, 38, 1, '2026-07-17 00:00:00', 'FACTURA', 'F001', '00000007', '6a5aa8f50d299b002941899a', 'PENDIENTE', 'CASH', 150.00, 0.00, 0.00, 150.00, 'COMPLETED', NULL, NULL, NULL, NULL, '2026-07-17 17:13:06', '2026-07-17 17:13:08', NULL),
 	(32, 4, 4, 38, 1, '2026-07-17 00:00:00', 'BOLETA', 'B001', '00000006', '6a5aaa9c31029f002962b54f', 'PENDIENTE', 'YAPE', 900.00, 0.00, 0.00, 900.00, 'COMPLETED', NULL, NULL, NULL, NULL, '2026-07-17 17:20:10', '2026-07-17 17:20:12', NULL),
-	(33, 4, 7, 38, 1, '2026-07-17 00:00:00', 'BOLETA', 'B001', '00000007', '6a5aac850d299b0029418a21', 'PENDIENTE', 'TRANSFER', 270.00, 0.00, 0.00, 270.00, 'COMPLETED', NULL, NULL, NULL, NULL, '2026-07-17 17:28:19', '2026-07-17 17:28:20', NULL),
+	(33, 4, 7, 38, 1, '2026-07-17 00:00:00', 'BOLETA', 'B001', '00000007', '6a5aac850d299b0029418a21', 'ACEPTADO', 'TRANSFER', 270.00, 0.00, 0.00, 270.00, 'COMPLETED', 'https://back.apisunat.com/documents/6a5aac850d299b0029418a21/getPDF/ticket58mm/10626765411-03-B001-00000007.PDF', 'https://back.apisunat.com/documents/6a5aac850d299b0029418a21/getPDF/ticket80mm/10626765411-03-B001-00000007.PDF', 'https://back.apisunat.com/documents/6a5aac850d299b0029418a21/getPDF/A5/10626765411-03-B001-00000007.PDF', 'https://back.apisunat.com/documents/6a5aac850d299b0029418a21/getPDF/A4/10626765411-03-B001-00000007.PDF', '2026-07-17 17:28:19', '2026-07-18 09:53:49', NULL),
 	(34, 4, 3, 38, 1, '2026-07-17 00:00:00', 'BOLETA', 'B001', '', NULL, 'NO_ENVIADO', 'YAPE', 450.00, 0.00, 0.00, 450.00, 'CANCELLED', NULL, NULL, NULL, NULL, '2026-07-17 17:53:48', '2026-07-17 17:55:54', NULL),
 	(35, 4, 3, 38, 1, '2026-07-17 00:00:00', 'BOLETA', 'B001', '', NULL, 'NO_ENVIADO', 'YAPE', 450.00, 0.00, 0.00, 450.00, 'CANCELLED', NULL, NULL, NULL, NULL, '2026-07-17 17:54:01', '2026-07-17 17:55:57', NULL),
-	(36, 4, 3, 38, 1, '2026-07-17 00:00:00', 'BOLETA', 'B001', '00000010', '6a5ab2f131029f002962b6a6', 'PENDIENTE', 'YAPE', 450.00, 0.00, 0.00, 450.00, 'COMPLETED', 'https://back.apisunat.com/documents/6a5ab2f131029f002962b6a6/getPDF/ticket58mm/10626765411-03-B001-00000010.PDF', 'https://back.apisunat.com/documents/6a5ab2f131029f002962b6a6/getPDF/ticket80mm/10626765411-03-B001-00000010.PDF', 'https://back.apisunat.com/documents/6a5ab2f131029f002962b6a6/getPDF/A5/10626765411-03-B001-00000010.PDF', 'https://back.apisunat.com/documents/6a5ab2f131029f002962b6a6/getPDF/A4/10626765411-03-B001-00000010.PDF', '2026-07-17 17:55:44', '2026-07-17 17:55:45', NULL),
-	(37, 4, 2, 38, 1, '2026-07-17 00:00:00', 'BOLETA', 'B001', '00000011', '6a5ab9360d299b0029418c92', 'PENDIENTE', 'CASH', 480.00, 0.00, 0.00, 480.00, 'COMPLETED', 'https://back.apisunat.com/documents/6a5ab9360d299b0029418c92/getPDF/ticket58mm/10626765411-03-B001-00000011.PDF', 'https://back.apisunat.com/documents/6a5ab9360d299b0029418c92/getPDF/ticket80mm/10626765411-03-B001-00000011.PDF', 'https://back.apisunat.com/documents/6a5ab9360d299b0029418c92/getPDF/A5/10626765411-03-B001-00000011.PDF', 'https://back.apisunat.com/documents/6a5ab9360d299b0029418c92/getPDF/A4/10626765411-03-B001-00000011.PDF', '2026-07-17 18:22:29', '2026-07-17 18:22:30', NULL),
-	(38, 4, 3, 38, 1, '2026-07-17 00:00:00', 'FACTURA', 'F001', '00000007', '6a5abe7831029f002962b8a5', 'PENDIENTE', 'CASH', 350.00, 0.00, 0.00, 350.00, 'COMPLETED', 'https://back.apisunat.com/documents/6a5abe7831029f002962b8a5/getPDF/ticket58mm/10626765411-01-F001-00000007.PDF', 'https://back.apisunat.com/documents/6a5abe7831029f002962b8a5/getPDF/ticket80mm/10626765411-01-F001-00000007.PDF', 'https://back.apisunat.com/documents/6a5abe7831029f002962b8a5/getPDF/A5/10626765411-01-F001-00000007.PDF', 'https://back.apisunat.com/documents/6a5abe7831029f002962b8a5/getPDF/A4/10626765411-01-F001-00000007.PDF', '2026-07-17 18:44:55', '2026-07-17 18:44:56', NULL),
-	(39, 4, 3, 38, 1, '2026-07-17 00:00:00', 'FACTURA', 'F001', '00000008', '6a5ac1120d299b0029418de1', 'PENDIENTE', 'TRANSFER', 140.00, 0.00, 0.00, 140.00, 'COMPLETED', 'https://back.apisunat.com/documents/6a5ac1120d299b0029418de1/getPDF/ticket58mm/10626765411-01-F001-00000008.PDF', 'https://back.apisunat.com/documents/6a5ac1120d299b0029418de1/getPDF/ticket80mm/10626765411-01-F001-00000008.PDF', 'https://back.apisunat.com/documents/6a5ac1120d299b0029418de1/getPDF/A5/10626765411-01-F001-00000008.PDF', 'https://back.apisunat.com/documents/6a5ac1120d299b0029418de1/getPDF/A4/10626765411-01-F001-00000008.PDF', '2026-07-17 18:55:59', '2026-07-17 18:56:02', NULL),
-	(40, 4, 2, 38, 1, '2026-07-17 00:00:00', 'BOLETA', 'B001', '00000012', '6a5ac1c80d299b0029418e05', 'PENDIENTE', 'TRANSFER', 140.00, 0.00, 0.00, 140.00, 'COMPLETED', 'https://back.apisunat.com/documents/6a5ac1c80d299b0029418e05/getPDF/ticket58mm/10626765411-03-B001-00000012.PDF', 'https://back.apisunat.com/documents/6a5ac1c80d299b0029418e05/getPDF/ticket80mm/10626765411-03-B001-00000012.PDF', 'https://back.apisunat.com/documents/6a5ac1c80d299b0029418e05/getPDF/A5/10626765411-03-B001-00000012.PDF', 'https://back.apisunat.com/documents/6a5ac1c80d299b0029418e05/getPDF/A4/10626765411-03-B001-00000012.PDF', '2026-07-17 18:59:03', '2026-07-17 18:59:04', NULL),
-	(41, 4, 3, 38, 1, '2026-07-17 00:00:00', 'BOLETA', 'B001', '00000013', '6a5ac2b60d299b0029418e28', 'PENDIENTE', 'CARD', 140.00, 0.00, 0.00, 140.00, 'COMPLETED', 'https://back.apisunat.com/documents/6a5ac2b60d299b0029418e28/getPDF/ticket58mm/10626765411-03-B001-00000013.PDF', 'https://back.apisunat.com/documents/6a5ac2b60d299b0029418e28/getPDF/ticket80mm/10626765411-03-B001-00000013.PDF', 'https://back.apisunat.com/documents/6a5ac2b60d299b0029418e28/getPDF/A5/10626765411-03-B001-00000013.PDF', 'https://back.apisunat.com/documents/6a5ac2b60d299b0029418e28/getPDF/A4/10626765411-03-B001-00000013.PDF', '2026-07-17 19:03:00', '2026-07-17 19:03:02', NULL);
+	(36, 4, 3, 38, 1, '2026-07-17 00:00:00', 'BOLETA', 'B001', '00000010', '6a5ab2f131029f002962b6a6', 'ACEPTADO', 'YAPE', 450.00, 0.00, 0.00, 450.00, 'COMPLETED', 'https://back.apisunat.com/documents/6a5ab2f131029f002962b6a6/getPDF/ticket58mm/10626765411-03-B001-00000010.PDF', 'https://back.apisunat.com/documents/6a5ab2f131029f002962b6a6/getPDF/ticket80mm/10626765411-03-B001-00000010.PDF', 'https://back.apisunat.com/documents/6a5ab2f131029f002962b6a6/getPDF/A5/10626765411-03-B001-00000010.PDF', 'https://back.apisunat.com/documents/6a5ab2f131029f002962b6a6/getPDF/A4/10626765411-03-B001-00000010.PDF', '2026-07-17 17:55:44', '2026-07-18 10:40:55', NULL),
+	(37, 4, 2, 38, 1, '2026-07-17 00:00:00', 'BOLETA', 'B001', '00000011', '6a5ab9360d299b0029418c92', 'ACEPTADO', 'CASH', 480.00, 0.00, 0.00, 480.00, 'COMPLETED', 'https://back.apisunat.com/documents/6a5ab9360d299b0029418c92/getPDF/ticket58mm/10626765411-03-B001-00000011.PDF', 'https://back.apisunat.com/documents/6a5ab9360d299b0029418c92/getPDF/ticket80mm/10626765411-03-B001-00000011.PDF', 'https://back.apisunat.com/documents/6a5ab9360d299b0029418c92/getPDF/A5/10626765411-03-B001-00000011.PDF', 'https://back.apisunat.com/documents/6a5ab9360d299b0029418c92/getPDF/A4/10626765411-03-B001-00000011.PDF', '2026-07-17 18:22:29', '2026-07-18 10:53:19', NULL),
+	(38, 4, 3, 38, 1, '2026-07-17 00:00:00', 'FACTURA', 'F001', '00000007', '6a5abe7831029f002962b8a5', 'ACEPTADO', 'CASH', 350.00, 0.00, 0.00, 350.00, 'COMPLETED', 'https://back.apisunat.com/documents/6a5abe7831029f002962b8a5/getPDF/ticket58mm/10626765411-01-F001-00000007.PDF', 'https://back.apisunat.com/documents/6a5abe7831029f002962b8a5/getPDF/ticket80mm/10626765411-01-F001-00000007.PDF', 'https://back.apisunat.com/documents/6a5abe7831029f002962b8a5/getPDF/A5/10626765411-01-F001-00000007.PDF', 'https://back.apisunat.com/documents/6a5abe7831029f002962b8a5/getPDF/A4/10626765411-01-F001-00000007.PDF', '2026-07-17 18:44:55', '2026-07-18 09:51:54', NULL),
+	(39, 4, 3, 38, 1, '2026-07-17 00:00:00', 'FACTURA', 'F001', '00000008', '6a5ac1120d299b0029418de1', 'ACEPTADO', 'TRANSFER', 140.00, 0.00, 0.00, 140.00, 'COMPLETED', 'https://back.apisunat.com/documents/6a5ac1120d299b0029418de1/getPDF/ticket58mm/10626765411-01-F001-00000008.PDF', 'https://back.apisunat.com/documents/6a5ac1120d299b0029418de1/getPDF/ticket80mm/10626765411-01-F001-00000008.PDF', 'https://back.apisunat.com/documents/6a5ac1120d299b0029418de1/getPDF/A5/10626765411-01-F001-00000008.PDF', 'https://back.apisunat.com/documents/6a5ac1120d299b0029418de1/getPDF/A4/10626765411-01-F001-00000008.PDF', '2026-07-17 18:55:59', '2026-07-18 09:43:21', NULL),
+	(40, 4, 2, 38, 1, '2026-07-17 00:00:00', 'BOLETA', 'B001', '00000012', '6a5ac1c80d299b0029418e05', 'ACEPTADO', 'TRANSFER', 140.00, 0.00, 0.00, 140.00, 'COMPLETED', 'https://back.apisunat.com/documents/6a5ac1c80d299b0029418e05/getPDF/ticket58mm/10626765411-03-B001-00000012.PDF', 'https://back.apisunat.com/documents/6a5ac1c80d299b0029418e05/getPDF/ticket80mm/10626765411-03-B001-00000012.PDF', 'https://back.apisunat.com/documents/6a5ac1c80d299b0029418e05/getPDF/A5/10626765411-03-B001-00000012.PDF', 'https://back.apisunat.com/documents/6a5ac1c80d299b0029418e05/getPDF/A4/10626765411-03-B001-00000012.PDF', '2026-07-17 18:59:03', '2026-07-18 09:41:55', NULL),
+	(41, 4, 3, 38, 1, '2026-07-17 00:00:00', 'BOLETA', 'B001', '00000013', '6a5ac2b60d299b0029418e28', 'ACEPTADO', 'CARD', 140.00, 0.00, 0.00, 140.00, 'COMPLETED', 'https://back.apisunat.com/documents/6a5ac2b60d299b0029418e28/getPDF/ticket58mm/10626765411-03-B001-00000013.PDF', 'https://back.apisunat.com/documents/6a5ac2b60d299b0029418e28/getPDF/ticket80mm/10626765411-03-B001-00000013.PDF', 'https://back.apisunat.com/documents/6a5ac2b60d299b0029418e28/getPDF/A5/10626765411-03-B001-00000013.PDF', 'https://back.apisunat.com/documents/6a5ac2b60d299b0029418e28/getPDF/A4/10626765411-03-B001-00000013.PDF', '2026-07-17 19:03:00', '2026-07-18 09:41:07', NULL),
+	(43, 4, 5, 38, 1, '2026-07-18 00:00:00', 'BOLETA', 'B001', '00000014', '6a5b93b10d299b0029419968', 'ACEPTADO', 'CASH', 230.00, 0.00, 0.00, 230.00, 'COMPLETED', 'https://back.apisunat.com/documents/6a5b93b10d299b0029419968/getPDF/ticket58mm/10626765411-03-B001-00000014.PDF', 'https://back.apisunat.com/documents/6a5b93b10d299b0029419968/getPDF/ticket80mm/10626765411-03-B001-00000014.PDF', 'https://back.apisunat.com/documents/6a5b93b10d299b0029419968/getPDF/A5/10626765411-03-B001-00000014.PDF', 'https://back.apisunat.com/documents/6a5b93b10d299b0029419968/getPDF/A4/10626765411-03-B001-00000014.PDF', '2026-07-18 09:54:38', '2026-07-18 10:00:11', NULL),
+	(44, 4, 3, 38, 1, '2026-07-18 00:00:00', 'FACTURA', 'F001', '00000009', '6a5b93ef0d299b002941996e', 'ACEPTADO', 'CARD', 50.00, 0.00, 0.00, 50.00, 'COMPLETED', 'https://back.apisunat.com/documents/6a5b93ef0d299b002941996e/getPDF/ticket58mm/10626765411-01-F001-00000009.PDF', 'https://back.apisunat.com/documents/6a5b93ef0d299b002941996e/getPDF/ticket80mm/10626765411-01-F001-00000009.PDF', 'https://back.apisunat.com/documents/6a5b93ef0d299b002941996e/getPDF/A5/10626765411-01-F001-00000009.PDF', 'https://back.apisunat.com/documents/6a5b93ef0d299b002941996e/getPDF/A4/10626765411-01-F001-00000009.PDF', '2026-07-18 09:55:41', '2026-07-18 09:59:34', NULL),
+	(45, 4, 3, 38, 1, '2026-07-18 00:00:00', 'FACTURA', 'F001', '00000010', '6a5baa130d299b0029419cbb', 'PENDIENTE', 'TRANSFER', 190.00, 0.00, 0.00, 190.00, 'COMPLETED', 'https://back.apisunat.com/documents/6a5baa130d299b0029419cbb/getPDF/ticket58mm/10626765411-01-F001-00000010.PDF', 'https://back.apisunat.com/documents/6a5baa130d299b0029419cbb/getPDF/ticket80mm/10626765411-01-F001-00000010.PDF', 'https://back.apisunat.com/documents/6a5baa130d299b0029419cbb/getPDF/A5/10626765411-01-F001-00000010.PDF', 'https://back.apisunat.com/documents/6a5baa130d299b0029419cbb/getPDF/A4/10626765411-01-F001-00000010.PDF', '2026-07-18 11:30:11', '2026-07-18 11:30:12', NULL),
+	(46, 4, 2, 38, 1, '2026-07-19 00:00:00', 'BOLETA', 'B001', '00000015', '6a5c6aa48f98f50029bc0453', 'PENDIENTE', 'CARD', 50.00, 0.00, 0.00, 50.00, 'COMPLETED', 'https://back.apisunat.com/documents/6a5c6aa48f98f50029bc0453/getPDF/ticket58mm/10626765411-03-B001-00000015.PDF', 'https://back.apisunat.com/documents/6a5c6aa48f98f50029bc0453/getPDF/ticket80mm/10626765411-03-B001-00000015.PDF', 'https://back.apisunat.com/documents/6a5c6aa48f98f50029bc0453/getPDF/A5/10626765411-03-B001-00000015.PDF', 'https://back.apisunat.com/documents/6a5c6aa48f98f50029bc0453/getPDF/A4/10626765411-03-B001-00000015.PDF', '2026-07-19 01:11:48', '2026-07-19 01:11:48', NULL),
+	(47, 4, 7, 38, 1, '2026-07-19 00:00:00', 'BOLETA', 'B001', '00000015', '6a5c6ae68f98f50029bc0455', 'PENDIENTE', 'CARD', 90.00, 0.00, 0.00, 90.00, 'COMPLETED', 'https://back.apisunat.com/documents/6a5c6ae68f98f50029bc0455/getPDF/ticket58mm/10626765411-03-B001-00000015.PDF', 'https://back.apisunat.com/documents/6a5c6ae68f98f50029bc0455/getPDF/ticket80mm/10626765411-03-B001-00000015.PDF', 'https://back.apisunat.com/documents/6a5c6ae68f98f50029bc0455/getPDF/A5/10626765411-03-B001-00000015.PDF', 'https://back.apisunat.com/documents/6a5c6ae68f98f50029bc0455/getPDF/A4/10626765411-03-B001-00000015.PDF', '2026-07-19 01:12:53', '2026-07-19 01:12:54', NULL),
+	(48, 4, 2, 41, 4, '2026-07-19 00:00:00', 'BOLETA', 'B001', '00000015', '6a5c72d44a94ed0029aab0a1', 'PENDIENTE', 'CASH', 60.00, 0.00, 0.00, 60.00, 'COMPLETED', 'https://back.apisunat.com/documents/6a5c72d44a94ed0029aab0a1/getPDF/ticket58mm/10626765411-03-B001-00000015.PDF', 'https://back.apisunat.com/documents/6a5c72d44a94ed0029aab0a1/getPDF/ticket80mm/10626765411-03-B001-00000015.PDF', 'https://back.apisunat.com/documents/6a5c72d44a94ed0029aab0a1/getPDF/A5/10626765411-03-B001-00000015.PDF', 'https://back.apisunat.com/documents/6a5c72d44a94ed0029aab0a1/getPDF/A4/10626765411-03-B001-00000015.PDF', '2026-07-19 01:46:42', '2026-07-19 01:46:44', NULL),
+	(49, 4, 2, 38, 1, '2026-07-19 00:00:00', 'BOLETA', 'B001', '00000015', '6a5c846d8f98f50029bc049f', 'PENDIENTE', 'CASH', 90.00, 0.00, 0.00, 90.00, 'COMPLETED', 'https://back.apisunat.com/documents/6a5c846d8f98f50029bc049f/getPDF/ticket58mm/10626765411-03-B001-00000015.PDF', 'https://back.apisunat.com/documents/6a5c846d8f98f50029bc049f/getPDF/ticket80mm/10626765411-03-B001-00000015.PDF', 'https://back.apisunat.com/documents/6a5c846d8f98f50029bc049f/getPDF/A5/10626765411-03-B001-00000015.PDF', 'https://back.apisunat.com/documents/6a5c846d8f98f50029bc049f/getPDF/A4/10626765411-03-B001-00000015.PDF', '2026-07-19 03:01:48', '2026-07-19 03:01:49', NULL);
 
 -- Volcando estructura para tabla db_nexopos_app.sale_details
 CREATE TABLE IF NOT EXISTS `sale_details` (
@@ -621,8 +662,11 @@ CREATE TABLE IF NOT EXISTS `sale_details` (
   `product_id` int unsigned NOT NULL,
   `quantity` decimal(10,2) NOT NULL,
   `sale_price` decimal(10,2) NOT NULL,
+  `unit_cost` decimal(10,2) NOT NULL DEFAULT '0.00',
+  `total_cost` decimal(10,2) NOT NULL DEFAULT '0.00',
   `discount` decimal(10,2) DEFAULT '0.00',
   `subtotal` decimal(10,2) NOT NULL,
+  `profit` decimal(10,2) NOT NULL DEFAULT '0.00',
   `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
   `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `deleted_at` datetime DEFAULT NULL,
@@ -631,39 +675,49 @@ CREATE TABLE IF NOT EXISTS `sale_details` (
   KEY `idx_sale_detail_product` (`product_id`),
   CONSTRAINT `fk_sale_detail_product` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`),
   CONSTRAINT `fk_sale_detail_sale` FOREIGN KEY (`sale_id`) REFERENCES `sales` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=53 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=64 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla db_nexopos_app.sale_details: ~4 rows (aproximadamente)
+-- Volcando datos para la tabla db_nexopos_app.sale_details: ~34 rows (aproximadamente)
 DELETE FROM `sale_details`;
-INSERT INTO `sale_details` (`id`, `sale_id`, `product_id`, `quantity`, `sale_price`, `discount`, `subtotal`, `created_at`, `updated_at`, `deleted_at`) VALUES
-	(23, 19, 6, 1.00, 40.00, 0.00, 40.00, '2026-07-10 17:53:58', '2026-07-10 17:53:58', NULL),
-	(24, 20, 5, 1.00, 90.00, 0.00, 90.00, '2026-07-10 17:55:07', '2026-07-10 17:55:07', NULL),
-	(25, 21, 5, 2.00, 90.00, 0.00, 180.00, '2026-07-11 02:01:33', '2026-07-11 02:01:33', NULL),
-	(26, 21, 3, 2.00, 30.00, 0.00, 60.00, '2026-07-11 02:01:33', '2026-07-11 02:01:33', NULL),
-	(29, 23, 5, 2.00, 90.00, 0.00, 180.00, '2026-07-17 16:33:29', '2026-07-17 16:33:29', NULL),
-	(30, 23, 3, 6.00, 30.00, 0.00, 180.00, '2026-07-17 16:33:29', '2026-07-17 16:33:29', NULL),
-	(31, 24, 3, 1.00, 30.00, 0.00, 30.00, '2026-07-17 16:40:53', '2026-07-17 16:40:53', NULL),
-	(32, 25, 3, 1.00, 30.00, 0.00, 30.00, '2026-07-17 16:48:26', '2026-07-17 16:48:26', NULL),
-	(33, 26, 3, 1.00, 30.00, 0.00, 30.00, '2026-07-17 16:52:08', '2026-07-17 16:52:08', NULL),
-	(34, 27, 3, 1.00, 30.00, 0.00, 30.00, '2026-07-17 16:56:42', '2026-07-17 16:56:42', NULL),
-	(35, 28, 3, 1.00, 30.00, 0.00, 30.00, '2026-07-17 16:57:04', '2026-07-17 16:57:04', NULL),
-	(36, 29, 3, 1.00, 30.00, 0.00, 30.00, '2026-07-17 17:00:57', '2026-07-17 17:00:57', NULL),
-	(37, 30, 3, 1.00, 30.00, 0.00, 30.00, '2026-07-17 17:05:16', '2026-07-17 17:05:16', NULL),
-	(38, 31, 4, 3.00, 50.00, 0.00, 150.00, '2026-07-17 17:13:06', '2026-07-17 17:13:06', NULL),
-	(39, 32, 5, 10.00, 90.00, 0.00, 900.00, '2026-07-17 17:20:10', '2026-07-17 17:20:10', NULL),
-	(40, 33, 5, 3.00, 90.00, 0.00, 270.00, '2026-07-17 17:28:19', '2026-07-17 17:28:19', NULL),
-	(41, 34, 5, 5.00, 90.00, 0.00, 450.00, '2026-07-17 17:53:48', '2026-07-17 17:53:48', NULL),
-	(42, 35, 5, 5.00, 90.00, 0.00, 450.00, '2026-07-17 17:54:01', '2026-07-17 17:54:01', NULL),
-	(43, 36, 5, 5.00, 90.00, 0.00, 450.00, '2026-07-17 17:55:44', '2026-07-17 17:55:44', NULL),
-	(44, 37, 5, 5.00, 90.00, 0.00, 450.00, '2026-07-17 18:22:29', '2026-07-17 18:22:29', NULL),
-	(45, 37, 3, 1.00, 30.00, 0.00, 30.00, '2026-07-17 18:22:29', '2026-07-17 18:22:29', NULL),
-	(46, 38, 4, 7.00, 50.00, 0.00, 350.00, '2026-07-17 18:44:55', '2026-07-17 18:44:55', NULL),
-	(47, 39, 5, 1.00, 90.00, 0.00, 90.00, '2026-07-17 18:56:00', '2026-07-17 18:56:00', NULL),
-	(48, 39, 4, 1.00, 50.00, 0.00, 50.00, '2026-07-17 18:56:00', '2026-07-17 18:56:00', NULL),
-	(49, 40, 4, 1.00, 50.00, 0.00, 50.00, '2026-07-17 18:59:03', '2026-07-17 18:59:03', NULL),
-	(50, 40, 5, 1.00, 90.00, 0.00, 90.00, '2026-07-17 18:59:03', '2026-07-17 18:59:03', NULL),
-	(51, 41, 5, 1.00, 90.00, 0.00, 90.00, '2026-07-17 19:03:00', '2026-07-17 19:03:00', NULL),
-	(52, 41, 4, 1.00, 50.00, 0.00, 50.00, '2026-07-17 19:03:00', '2026-07-17 19:03:00', NULL);
+INSERT INTO `sale_details` (`id`, `sale_id`, `product_id`, `quantity`, `sale_price`, `unit_cost`, `total_cost`, `discount`, `subtotal`, `profit`, `created_at`, `updated_at`, `deleted_at`) VALUES
+	(23, 19, 6, 1.00, 40.00, 0.00, 0.00, 0.00, 40.00, 0.00, '2026-07-10 17:53:58', '2026-07-10 17:53:58', NULL),
+	(24, 20, 5, 1.00, 90.00, 0.00, 0.00, 0.00, 90.00, 0.00, '2026-07-10 17:55:07', '2026-07-10 17:55:07', NULL),
+	(25, 21, 5, 2.00, 90.00, 0.00, 0.00, 0.00, 180.00, 0.00, '2026-07-11 02:01:33', '2026-07-11 02:01:33', NULL),
+	(26, 21, 3, 2.00, 30.00, 0.00, 0.00, 0.00, 60.00, 0.00, '2026-07-11 02:01:33', '2026-07-11 02:01:33', NULL),
+	(29, 23, 5, 2.00, 90.00, 0.00, 0.00, 0.00, 180.00, 0.00, '2026-07-17 16:33:29', '2026-07-17 16:33:29', NULL),
+	(30, 23, 3, 6.00, 30.00, 0.00, 0.00, 0.00, 180.00, 0.00, '2026-07-17 16:33:29', '2026-07-17 16:33:29', NULL),
+	(31, 24, 3, 1.00, 30.00, 0.00, 0.00, 0.00, 30.00, 0.00, '2026-07-17 16:40:53', '2026-07-17 16:40:53', NULL),
+	(32, 25, 3, 1.00, 30.00, 0.00, 0.00, 0.00, 30.00, 0.00, '2026-07-17 16:48:26', '2026-07-17 16:48:26', NULL),
+	(33, 26, 3, 1.00, 30.00, 0.00, 0.00, 0.00, 30.00, 0.00, '2026-07-17 16:52:08', '2026-07-17 16:52:08', NULL),
+	(34, 27, 3, 1.00, 30.00, 0.00, 0.00, 0.00, 30.00, 0.00, '2026-07-17 16:56:42', '2026-07-17 16:56:42', NULL),
+	(35, 28, 3, 1.00, 30.00, 0.00, 0.00, 0.00, 30.00, 0.00, '2026-07-17 16:57:04', '2026-07-17 16:57:04', NULL),
+	(36, 29, 3, 1.00, 30.00, 0.00, 0.00, 0.00, 30.00, 0.00, '2026-07-17 17:00:57', '2026-07-17 17:00:57', NULL),
+	(37, 30, 3, 1.00, 30.00, 0.00, 0.00, 0.00, 30.00, 0.00, '2026-07-17 17:05:16', '2026-07-17 17:05:16', NULL),
+	(38, 31, 4, 3.00, 50.00, 0.00, 0.00, 0.00, 150.00, 0.00, '2026-07-17 17:13:06', '2026-07-17 17:13:06', NULL),
+	(39, 32, 5, 10.00, 90.00, 0.00, 0.00, 0.00, 900.00, 0.00, '2026-07-17 17:20:10', '2026-07-17 17:20:10', NULL),
+	(40, 33, 5, 3.00, 90.00, 0.00, 0.00, 0.00, 270.00, 0.00, '2026-07-17 17:28:19', '2026-07-17 17:28:19', NULL),
+	(41, 34, 5, 5.00, 90.00, 0.00, 0.00, 0.00, 450.00, 0.00, '2026-07-17 17:53:48', '2026-07-17 17:53:48', NULL),
+	(42, 35, 5, 5.00, 90.00, 0.00, 0.00, 0.00, 450.00, 0.00, '2026-07-17 17:54:01', '2026-07-17 17:54:01', NULL),
+	(43, 36, 5, 5.00, 90.00, 0.00, 0.00, 0.00, 450.00, 0.00, '2026-07-17 17:55:44', '2026-07-17 17:55:44', NULL),
+	(44, 37, 5, 5.00, 90.00, 0.00, 0.00, 0.00, 450.00, 0.00, '2026-07-17 18:22:29', '2026-07-17 18:22:29', NULL),
+	(45, 37, 3, 1.00, 30.00, 0.00, 0.00, 0.00, 30.00, 0.00, '2026-07-17 18:22:29', '2026-07-17 18:22:29', NULL),
+	(46, 38, 4, 7.00, 50.00, 0.00, 0.00, 0.00, 350.00, 0.00, '2026-07-17 18:44:55', '2026-07-17 18:44:55', NULL),
+	(47, 39, 5, 1.00, 90.00, 0.00, 0.00, 0.00, 90.00, 0.00, '2026-07-17 18:56:00', '2026-07-17 18:56:00', NULL),
+	(48, 39, 4, 1.00, 50.00, 0.00, 0.00, 0.00, 50.00, 0.00, '2026-07-17 18:56:00', '2026-07-17 18:56:00', NULL),
+	(49, 40, 4, 1.00, 50.00, 0.00, 0.00, 0.00, 50.00, 0.00, '2026-07-17 18:59:03', '2026-07-17 18:59:03', NULL),
+	(50, 40, 5, 1.00, 90.00, 0.00, 0.00, 0.00, 90.00, 0.00, '2026-07-17 18:59:03', '2026-07-17 18:59:03', NULL),
+	(51, 41, 5, 1.00, 90.00, 0.00, 0.00, 0.00, 90.00, 0.00, '2026-07-17 19:03:00', '2026-07-17 19:03:00', NULL),
+	(52, 41, 4, 1.00, 50.00, 0.00, 0.00, 0.00, 50.00, 0.00, '2026-07-17 19:03:00', '2026-07-17 19:03:00', NULL),
+	(54, 43, 5, 1.00, 90.00, 0.00, 0.00, 0.00, 90.00, 0.00, '2026-07-18 09:54:38', '2026-07-18 09:54:38', NULL),
+	(55, 43, 4, 1.00, 50.00, 0.00, 0.00, 0.00, 50.00, 0.00, '2026-07-18 09:54:38', '2026-07-18 09:54:38', NULL),
+	(56, 43, 5, 1.00, 90.00, 0.00, 0.00, 0.00, 90.00, 0.00, '2026-07-18 09:54:38', '2026-07-18 09:54:38', NULL),
+	(57, 44, 4, 1.00, 50.00, 0.00, 0.00, 0.00, 50.00, 0.00, '2026-07-18 09:55:41', '2026-07-18 09:55:41', NULL),
+	(58, 45, 5, 1.00, 0.00, 30.00, 30.00, 0.00, 90.00, 60.00, '2026-07-18 11:30:11', '2026-07-18 11:30:11', NULL),
+	(59, 45, 5, 1.00, 0.00, 30.00, 30.00, 0.00, 100.00, 70.00, '2026-07-18 11:30:11', '2026-07-18 11:30:11', NULL),
+	(60, 46, 4, 1.00, 0.00, 30.00, 30.00, 0.00, 50.00, 20.00, '2026-07-19 01:11:48', '2026-07-19 01:11:48', NULL),
+	(61, 47, 5, 1.00, 0.00, 30.00, 30.00, 0.00, 90.00, 60.00, '2026-07-19 01:12:53', '2026-07-19 01:12:53', NULL),
+	(62, 48, 1, 1.00, 0.00, 30.00, 30.00, 0.00, 60.00, 30.00, '2026-07-19 01:46:42', '2026-07-19 01:46:42', NULL),
+	(63, 49, 5, 1.00, 0.00, 30.00, 30.00, 0.00, 90.00, 60.00, '2026-07-19 03:01:48', '2026-07-19 03:01:48', NULL);
 
 -- Volcando estructura para tabla db_nexopos_app.storage_files
 CREATE TABLE IF NOT EXISTS `storage_files` (
@@ -685,13 +739,16 @@ CREATE TABLE IF NOT EXISTS `storage_files` (
   `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `deleted_at` datetime DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=1386 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=1389 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Volcando datos para la tabla db_nexopos_app.storage_files: ~2 rows (aproximadamente)
 DELETE FROM `storage_files`;
 INSERT INTO `storage_files` (`id`, `name`, `company_id`, `path`, `type`, `size_b`, `size`, `format`, `embedded`, `folder`, `uri`, `bucket`, `upload_file_json`, `uploaded_file`, `created_at`, `updated_at`, `deleted_at`) VALUES
 	(1384, 'omar1.jpg', 4, '/uploads/profile/17831390566a488af00c6df-omar1.jpg', 'image/jpeg', '3180766', '3.03 MB', 'jpg', NULL, NULL, NULL, 'localhost', NULL, NULL, '2026-07-03 23:24:16', '2026-07-03 23:24:16', NULL),
-	(1385, 'WhatsApp Image 2026-07-09 at 9.19.35 AM.jpeg', 4, '/uploads/profile/17837484736a51d779cc15e-whatsapp image 2026-07-09 at 9.19.35 am.jpeg', 'image/jpeg', '271421', '265.06 KB', 'jpeg', NULL, NULL, NULL, 'localhost', NULL, NULL, '2026-07-11 00:41:13', '2026-07-11 00:41:13', NULL);
+	(1385, 'WhatsApp Image 2026-07-09 at 9.19.35 AM.jpeg', 4, '/uploads/profile/17837484736a51d779cc15e-whatsapp image 2026-07-09 at 9.19.35 am.jpeg', 'image/jpeg', '271421', '265.06 KB', 'jpeg', NULL, NULL, NULL, 'localhost', NULL, NULL, '2026-07-11 00:41:13', '2026-07-11 00:41:13', NULL),
+	(1386, 'WhatsApp Image 2026-07-09 at 9.19.38 AM.jpeg', 4, '/uploads/profile/17844469836a5c80071ac07-whatsapp image 2026-07-09 at 9.19.38 am.jpeg', 'image/jpeg', '271421', '265.06 KB', 'jpeg', NULL, NULL, NULL, 'localhost', NULL, NULL, '2026-07-19 02:43:03', '2026-07-19 02:43:03', NULL),
+	(1387, 'logo-principal.jpeg', 4, '/uploads/profile/17844489236a5c879ba2e8a-logo-principal.jpeg', 'image/jpeg', '132510', '129.4 KB', 'jpeg', NULL, NULL, NULL, 'localhost', NULL, NULL, '2026-07-19 03:15:23', '2026-07-19 03:15:23', NULL),
+	(1388, 'logo-principal.jpeg', 4, '/uploads/profile/17844489236a5c879ba7f81-logo-principal.jpeg', 'image/jpeg', '132510', '129.4 KB', 'jpeg', NULL, NULL, NULL, 'localhost', NULL, NULL, '2026-07-19 03:15:23', '2026-07-19 03:15:23', NULL);
 
 -- Volcando estructura para tabla db_nexopos_app.suppliers
 CREATE TABLE IF NOT EXISTS `suppliers` (
@@ -763,7 +820,7 @@ CREATE TABLE IF NOT EXISTS `users` (
 -- Volcando datos para la tabla db_nexopos_app.users: ~4 rows (aproximadamente)
 DELETE FROM `users`;
 INSERT INTO `users` (`id`, `foto_id`, `name`, `paternal_surname`, `maternal_surname`, `username`, `email`, `password`, `status`, `created_at`, `updated_at`, `deleted_at`) VALUES
-	(38, 1385, 'Richar Nixon', 'Coronado', 'Inoñan', 'richar', 'richarnixoncoronadoinonan@gmail.com', '$2y$10$xgmK7Nlc34AR1WmqwVn8teNNBPvw6.9byqeStOT7Ay8PJj.07B1JC', 1, '2025-06-12 17:34:03', '2026-07-11 10:19:42', NULL),
+	(38, 1386, 'Richar Nixon', 'Coronado', 'Inoñan', 'richar', 'richarnixoncoronadoinonan@gmail.com', '$2y$10$xgmK7Nlc34AR1WmqwVn8teNNBPvw6.9byqeStOT7Ay8PJj.07B1JC', 1, '2025-06-12 17:34:03', '2026-07-19 02:43:03', NULL),
 	(39, 1382, 'Nicolas', 'Cotrina', 'Llontop', 'nico', 'stafano@gmail.com', '$2y$10$xgmK7Nlc34AR1WmqwVn8teNNBPvw6.9byqeStOT7Ay8PJj.07B1JC', 1, '2025-06-18 18:08:03', '2025-07-10 17:20:24', NULL),
 	(40, NULL, 'Omar', 'Serquen', 'Coronado', 'omar', 'serquencoronadoomardavid@gmail.com', '$2y$10$mV.tFedxFk9g1Lh8gkA4NOx0uhGsfI4HBQBkKxFkSdB4qGZtl0BhG', 1, '2026-07-09 19:34:14', '2026-07-09 19:34:14', NULL),
 	(41, NULL, 'Usuario prueba', 'shbdd', 'hfbwefbwe', 'maria', 'ejnwe@gmail.co', '$2y$10$x3qyUgoETJII3l88sZquQ.yvSPbXi.ST.h8lqk5dZlrLIV/rdffry', 1, '2026-07-10 11:33:14', '2026-07-10 11:33:14', NULL);
