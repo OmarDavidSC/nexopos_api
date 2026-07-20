@@ -88,17 +88,17 @@ class ReportInventoryDow
                 $query->where('product_stocks.branch_id', (int) $input['branch_id']);
             }
 
-            if (!empty($input['product_id'])) {
-                $query->where('product_stocks.product_id', (int) $input['product_id']);
-            }
+            // if (!empty($input['product_id'])) {
+            //     $query->where('product_stocks.product_id', (int) $input['product_id']);
+            // }
 
-            if (!empty($input['category_id'])) {
-                $categoryId = (int) $input['category_id'];
+            // if (!empty($input['category_id'])) {
+            //     $categoryId = (int) $input['category_id'];
 
-                $query->wherHas('product', function ($productQuery) use ($categoryId) {
-                    $productQuery->where('category_id', $categoryId);
-                });
-            }
+            //     $query->wherHas('product', function ($productQuery) use ($categoryId) {
+            //         $productQuery->where('category_id', $categoryId);
+            //     });
+            // }
 
             if (!empty($input['status'])) {
                 if ($input['status'] === 'OUT_OF_STOCK') {
