@@ -14,7 +14,7 @@ class Company extends Model
         'name',
         'ruc',
         'business_name',
-        // 'trade_name',
+        'phone',
         'fiscal_address',
         'sunat_persona_id',
         'sunat_persona_token',
