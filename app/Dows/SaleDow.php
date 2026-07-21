@@ -9,6 +9,7 @@ use App\Models\SaleDetail;
 use App\Services\BranchService;
 use App\Services\InventoryService;
 use App\Services\ProductStockService;
+use App\Services\SunatApiService;
 use Illuminate\Database\Capsule\Manager as DB;
 use App\Utilities\FG;
 
@@ -31,6 +32,7 @@ class SaleDow
             $customer_id = isset($input['customer_id']) && $input['customer_id'] !== '' ? (int)$input['customer_id'] : null;
             $branch_id = isset($input['branch_id']) && $input['branch_id'] !== '' ? (int)$input['branch_id'] : null;
             $status = $input['status'] ?? '';
+            $sunat_status = $input['sunat_status'] ?? '';
             $payment_method = $input['payment_method'] ?? '';
 
             $query = Sale::with([
@@ -65,6 +67,10 @@ class SaleDow
                 $query->where('status', $status);
             }
 
+            if ($sunat_status !== '') {
+                $query->where('sunat_status', $sunat_status);
+            }
+
             if ($payment_method !== '') {
                 $query->where('payment_method', $payment_method);
             }
@@ -91,6 +97,11 @@ class SaleDow
                     'items_count' => $item->details_count,
                     'status' => $item->status,
                     'status_label' => FG::getStatusLabel($item->status),
+                    'sunat_status' => $item->sunat_status,
+                    // 'pdf_58mm' =>  $item->pdf_58mm,
+                    // 'pdf_80mm' => $item->pdf_80mm,
+                    // 'pdf_a5' => $item->pdf_a5,
+                    // 'pdf_a4' => $item->pdf_a4
                 ];
             });
 
@@ -114,30 +125,83 @@ class SaleDow
     public function store($request)
     {
         $response = FG::responseDefault();
-        DB::beginTransaction();
+
         try {
+            DB::beginTransaction();
+
             $input = $request->getParsedBody();
             $company_id = Application::getItem('company_id');
             $branch_id = Application::getItem('branch_id');
             $user_id = Application::getItem('user_id');
 
             $this->validateStore($input);
+
             $sale = $this->createSale($input, $company_id, $user_id, $branch_id);
             $details = json_decode($input['details'], true);
+
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                throw new \Exception('El detalle de la venta no contiene un JSON válido.');
+            }
+
+            if (empty($details)) {
+                throw new \Exception('Debe agregar al menos un producto.');
+            }
 
             foreach ($details as $detail) {
                 $this->processSaleDetail($sale, $detail, $company_id, $user_id);
             }
             DB::commit();
-
-            $response['success'] = true;
-            $response['data'] = $sale;
-            $response['message'] = 'Venta registrada correctamente.';
         } catch (\Exception $e) {
             DB::rollBack();
             $response['success'] = false;
             $response['message'] = $e->getMessage();
+            return $response;
         }
+
+        if (in_array($sale->voucher_type, ['BOLETA', 'FACTURA'], true)) {
+            try {
+                $payload = $this->buildSunatPayload($sale);
+                $sunatService = new SunatApiService();
+                $sunatResult = $sunatService->emit($payload);
+                $sunatResponse = $sunatResult['response'] ?? [];
+
+                if (!($sunatResponse['success'] ?? false)) {
+                    $sale->sunat_status = 'ERROR';
+                    $sale->save();
+                    $response['success'] = true;
+                    $response['data'] = $sale->fresh();
+                    $response['message'] = 'Venta registrada, pero no se pudo emitir el comprobante: ' . ($sunatResponse['message'] ?? 'Error desconocido.');
+                    return $response;
+                }
+
+                $sunatData = $sunatResponse['data'] ?? [];
+
+                if (empty($sunatData['documentId'])) {
+                    throw new \Exception('SUNAT no devolvió el documentId.');
+                }
+
+                $sale->sunat_document_id = $sunatData['documentId'];
+                $sale->sunat_status = $sunatData['status'] ?? 'PENDIENTE';
+                $sale->voucher_series = $sunatData['serie'] ?? $sale->voucher_series;
+                $sale->voucher_number = $sunatData['number'] ?? $sale->voucher_number;
+                $sale->pdf_58mm = $sunatData['pdf']['58mm'] ?? null;
+                $sale->pdf_80mm = $sunatData['pdf']['80mm'] ?? null;
+                $sale->pdf_a5 = $sunatData['pdf']['A5'] ?? null;
+                $sale->pdf_a4 = $sunatData['pdf']['A4'] ?? null;
+                $sale->save();
+            } catch (\Exception $e) {
+                $sale->sunat_status = 'ERROR';
+                $sale->save();
+                $response['success'] = true;
+                $response['data'] = $sale->fresh();
+                $response['message'] = 'Venta registrada, pero no se pudo emitir el comprobante: ' . $e->getMessage();
+                return $response;
+            }
+        }
+
+        $response['success'] = true;
+        $response['data'] = $sale->fresh();
+        $response['message'] = 'Venta registrada correctamente.';
         return $response;
     }
 
@@ -164,22 +228,34 @@ class SaleDow
                 throw new \Exception("La venta no fue encontrada.");
             }
 
+            if (!empty($sale->sunat_document_id)) {
+                $this->updateSunatStatus($sale);
+                $sale->refresh();
+            }
+
             $response['success'] = true;
             $response['data'] = [
                 'sale' => [
                     'id' => $sale->id,
                     'customer_id' => $sale->customer_id,
                     'customer' => $sale->customer?->name,
+                    'customer_phone' => $sale->customer?->phone,
                     'sale_date' => FG::formatDateTimeHuman($sale->sale_date),
                     'voucher_type' => $sale->voucher_type,
                     'voucher_series' => $sale->voucher_series,
                     'voucher_number' => $sale->voucher_number,
                     'payment_method' => $sale->payment_method,
+                    'sunat_document_id' => $sale->sunat_document_id,
+                    'sunat_status' => $sale->sunat_status,
                     'subtotal' => $sale->subtotal,
                     'tax' => $sale->tax,
                     'discount' => $sale->discount,
                     'total' => $sale->total,
                     'status' => $sale->status,
+                    'pdf_58mm' =>  $sale->pdf_58mm,
+                    'pdf_80mm' => $sale->pdf_80mm,
+                    'pdf_a5' => $sale->pdf_a5,
+                    'pdf_a4' => $sale->pdf_a4
                 ],
                 'details' => $sale->details->map(function ($item) {
                     return [
@@ -190,7 +266,7 @@ class SaleDow
                         'quantity' => $item->quantity,
                         'sale_price' => $item->sale_price,
                         'discount' => $item->discount,
-                        'subtotal' => $item->subtotal
+                        'subtotal' => $item->subtotal,
                     ];
                 })
             ];
@@ -306,12 +382,15 @@ class SaleDow
 
     private function processSaleDetail(Sale $sale, array $item, int $company_id, int $user_id)
     {
-        $product = Product::find($item['product_id']);
+        $product = Product::where('company_id', $company_id)
+            ->where('id', $item['product_id'])
+            ->whereNull('deleted_at')
+            ->first();
         if (!$product) {
             throw new \Exception("Producto no encontrado.");
         }
 
-        $this->createSaleDetail($sale, $item);
+        $this->createSaleDetail($sale, $item, $product);
         $result = ProductStockService::decrease($company_id, $sale->branch_id, $product->id, $item['quantity']);
         InventoryService::createMovement(
             $company_id,
@@ -328,15 +407,45 @@ class SaleDow
         );
     }
 
-    private function createSaleDetail(Sale $sale, array $item)
+    private function createSaleDetail(Sale $sale, array $item, Product $product)
     {
+
+        $quantity = (float)  $item['quantity'];
+        $salePrice  = (float)  $item['sale_price'];
+        $discount = (float)  $item['discount'];
+
+        if ($quantity <= 0) {
+            throw new \Exception("La cantidad del producto {$product->name} debe ser mayor a cero.");
+        }
+
+        if ($salePrice <= 0) {
+            throw new \Exception("El precio del producto {$product->name} debe ser mayor a cero.");
+        }
+
+        if ($discount < 0) {
+            throw new \Exception("El descuento no puede ser negativo.");
+        }
+
+        $grossAmount = round($quantity * $salePrice, 2);
+        if ($discount > $grossAmount) {
+            throw new \Exception("El descuento no puede superar el importe del producto.");
+        }
+
+        $subtotal = round($grossAmount - $discount, 2);
+        $unitCost = (float)$product->purchase_price;
+        $totalCost = round($quantity * $unitCost, 2);
+        $profit = round($subtotal - $totalCost, 2);
+
         $detail = new SaleDetail();
         $detail->sale_id = $sale->id;
-        $detail->product_id = $item['product_id'];
-        $detail->quantity = $item['quantity'];
-        $detail->sale_price = $item['sale_price'];
-        $detail->discount = $item['discount'] ?? 0;
-        $detail->subtotal = $item['subtotal'];
+        $detail->product_id = $product->id;
+        $detail->quantity = $quantity;
+        $detail->sale_price = $salePrice;
+        $detail->unit_cost = round($unitCost, 2);
+        $detail->total_cost = $totalCost;
+        $detail->discount = round($discount, 2);
+        $detail->subtotal = $subtotal;
+        $detail->profit = $profit;
         $detail->save();
     }
 
@@ -362,5 +471,114 @@ class SaleDow
             $sale->id,
             'Ingreso por cancelación de venta'
         );
+    }
+
+    private function buildSunatPayload(Sale $sale): array
+    {
+        $sale->load(['company', 'customer', 'details.product',]);
+        $company = $sale->company;
+        $customer = $sale->customer;
+
+        if (!$company) {
+            throw new \Exception('No se encontró la empresa de la venta.');
+        }
+
+        if (!$customer) {
+            throw new \Exception('No se encontró el cliente de la venta.');
+        }
+
+        if ($sale->details->isEmpty()) {
+            throw new \Exception('La venta no contiene productos para emitir a SUNAT.');
+        }
+
+        $tipoDocumento = match ($sale->voucher_type) {
+            'FACTURA' => '01',
+            'BOLETA' => '03',
+            default => null,
+        };
+
+        if (!$tipoDocumento) {
+            throw new \Exception('El tipo de comprobante no se envía a SUNAT.');
+        }
+
+        $tipoDocumentoCliente = match ($customer->document_type) {
+            'DNI' => '1',
+            'RUC' => '6',
+            'CE' => '4',
+            'PASSPORT', 'PASAPORTE' => '7',
+            default => '0',
+        };
+
+        if ($tipoDocumento === '01' && $tipoDocumentoCliente !== '6') {
+            throw new \Exception('Para emitir una factura el cliente debe tener RUC.');
+        }
+
+        if (!$tipoDocumento) {
+            throw new \Exception('El tipo de comprobante no se envía a SUNAT.');
+        }
+
+        $items = [];
+        foreach ($sale->details as $detail) {
+            $items[] = ['descripcion' => $detail->product->name, 'cantidad' => (float)$detail->quantity, 'precio' => (float)$detail->sale_price,];
+        }
+
+        return [
+            'empresa' => [
+                'ruc' => $company->ruc,
+                'persona_id' => $company->sunat_persona_id,
+                'persona_token' => $company->sunat_persona_token,
+                'razon_social' => $company->business_name,
+                'nombre_comercial' => $company->name,
+                'direccion' => $company->fiscal_address,
+            ],
+            'cliente' => [
+                'tipo_documento' => $tipoDocumentoCliente,
+                'numero_documento' => $customer->document_number,
+                'nombre' => $customer->name,
+                'direccion' => $customer->address ?? '-',
+            ],
+            'comprobante' => [
+                'tipo_documento' => $tipoDocumento,
+                'serie' => $sale->voucher_series,
+                'moneda' => $company->currency_code ?? 'PEN',
+            ],
+            'items' => $items,
+        ];
+    }
+
+    private function updateSunatStatus(Sale $sale): void
+    {
+        if (empty($sale->sunat_document_id)) {
+            return;
+        }
+
+        try {
+            $sunatService = new SunatApiService();
+            $sunatResult = $sunatService->document($sale->sunat_document_id);
+            if (!($sunatResult['response']['success'] ?? false)) {
+                return;
+            }
+
+            $sunatData = $sunatResult['response']['data'] ?? [];
+            // var_dump($sunatData);exit;
+            $pdf = $sunatData['pdf'] ?? [];
+
+            $newStatus = strtoupper(trim((string)($sunatData['status'] ?? $sale->sunat_status)));
+            $allowedStatuses = ['NO_ENVIADO', 'PENDIENTE', 'ACEPTADO', 'RECHAZADO', 'ERROR'];
+
+            if (in_array($newStatus, $allowedStatuses, true)) {
+                $sale->sunat_status = $newStatus;
+            }
+
+            $sale->voucher_series = $sunatData['serie'] ?? $sale->voucher_series;
+            $sale->voucher_number = $sunatData['number'] ?? $sale->voucher_number;
+            $sale->pdf_58mm = $pdf['58mm'] ?? $sunatData['pdf_58mm'] ?? $sale->pdf_58mm;
+            $sale->pdf_80mm = $pdf['80mm'] ?? $sunatData['pdf_80mm'] ?? $sale->pdf_80mm;
+            $sale->pdf_a5 = $pdf['A5'] ?? $sunatData['pdf_a5'] ?? $sale->pdf_a5;
+            $sale->pdf_a4 = $pdf['A4'] ?? $sunatData['pdf_a4'] ?? $sale->pdf_a4;
+            $sale->save();
+        } catch (\Throwable $e) {
+            error_log('Error consultando estado SUNAT de la venta ' . $sale->id . ': ' . $e->getMessage());
+        }
     }
 }

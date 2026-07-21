@@ -22,14 +22,14 @@ class DashboardDow
             $response['data'] = [
                 "summary" => $this->summary($company_id),
 
-                "inventory" => $this->inventorySummary($company_id),
-                "alerts" => $this->alerts($company_id),
-                "sales_today" => $this->salesToday($company_id),
-                "purchases_today" => $this->purchasesToday($company_id),
-                "sales_chart" => $this->salesChart($company_id),
+                // "inventory" => $this->inventorySummary($company_id),
+                // "alerts" => $this->alerts($company_id),
+                // "sales_today" => $this->salesToday($company_id),
+                // "purchases_today" => $this->purchasesToday($company_id),
+                // "sales_chart" => $this->salesChart($company_id),
                 "top_products" => $this->topProducts($company_id),
                 "top_categories" => $this->topCategories($company_id),
-                "branch_performance" => $this->branchPerformance($company_id)
+                // "branch_performance" => $this->branchPerformance($company_id)
             ];
 
             $response['message'] = 'successfully.';
