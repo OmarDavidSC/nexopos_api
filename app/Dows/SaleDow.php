@@ -239,6 +239,7 @@ class SaleDow
                     'id' => $sale->id,
                     'customer_id' => $sale->customer_id,
                     'customer' => $sale->customer?->name,
+                    'customer_phone' => $sale->customer?->phone,
                     'sale_date' => FG::formatDateTimeHuman($sale->sale_date),
                     'voucher_type' => $sale->voucher_type,
                     'voucher_series' => $sale->voucher_series,
