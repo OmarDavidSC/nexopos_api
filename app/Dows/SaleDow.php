@@ -9,6 +9,7 @@ use App\Models\SaleDetail;
 use App\Services\BranchService;
 use App\Services\InventoryService;
 use App\Services\ProductStockService;
+use App\Services\SaleService;
 use App\Services\SunatApiService;
 use Illuminate\Database\Capsule\Manager as DB;
 use App\Utilities\FG;
@@ -136,8 +137,9 @@ class SaleDow
 
             $this->validateStore($input);
 
-            $sale = $this->createSale($input, $company_id, $user_id, $branch_id);
+            // $sale = $this->createSale($input, $company_id, $user_id, $branch_id);
             $details = json_decode($input['details'], true);
+            // SaleService::createInitialPayment($sale, $input);
 
             if (json_last_error() !== JSON_ERROR_NONE) {
                 throw new \Exception('El detalle de la venta no contiene un JSON válido.');
@@ -146,6 +148,9 @@ class SaleDow
             if (empty($details)) {
                 throw new \Exception('Debe agregar al menos un producto.');
             }
+
+            $sale = $this->createSale($input,$company_id,$user_id,$branch_id);
+            SaleService::createInitialPayment($sale,$input);
 
             foreach ($details as $detail) {
                 $this->processSaleDetail($sale, $detail, $company_id, $user_id);
@@ -343,23 +348,57 @@ class SaleDow
         if (empty($input['customer_id'])) {
             throw new \Exception("Seleccione un cliente.");
         }
-
         if (empty($input['sale_date'])) {
             throw new \Exception("Seleccione la fecha de venta.");
         }
-
         if (empty($input['details'])) {
             throw new \Exception("Debe agregar productos.");
         }
-
         $details = json_decode($input['details'], true);
         if (!is_array($details) || count($details) == 0) {
             throw new \Exception("Debe agregar al menos un producto.");
+        }
+        $paymentCondition = strtoupper(trim($input['payment_condition'] ?? ''));
+        if (!in_array($paymentCondition, ['CASH', 'CREDIT'], true)) {
+            throw new \Exception("Seleccione una condición de pago válida.");
+        }
+        $total = round((float)($input['total'] ?? 0), 2);
+        $amountPaid = round((float)($input['amount_paid'] ?? 0), 2);
+        if ($amountPaid < 0) {
+            throw new \Exception("El monto pagado no puede ser negativo.");
+        }
+        if ($amountPaid > $total) {
+            throw new \Exception("El monto pagado no puede superar el total de la venta.");
+        }
+        if ($paymentCondition === 'CASH' && $amountPaid > 0 && $amountPaid < $total) {
+            throw new \Exception("Una venta al contado debe pagarse completamente.");
+        }
+
+        if ($paymentCondition === 'CREDIT' && empty($input['due_date'])) {
+            throw new \Exception("Seleccione la fecha de vencimiento.");
         }
     }
 
     private function createSale($input, $company_id, $user_id, $branch_id)
     {
+        $paymentCondition = strtoupper(trim($input['payment_condition']));
+
+        $total =  round((float) $input['total'], 2);
+        if ($paymentCondition === 'CASH') {
+            $amountPaid = $total;
+        } else {
+            $amountPaid = round((float)($input['amount_paid'] ?? 0), 2);
+        }
+
+        $balanceDue = round($total - $amountPaid, 2);
+
+        if ($amountPaid <= 0) {
+            $paymentStatus = 'PENDING';
+        } elseif ($amountPaid < $total) {
+            $paymentStatus = 'PARTIAL';
+        } else {
+            $paymentStatus = 'PAID';
+        }
 
         $sale = new Sale();
         $sale->company_id = $company_id;
@@ -371,10 +410,15 @@ class SaleDow
         $sale->voucher_series = $input['voucher_series'];
         $sale->voucher_number = $input['voucher_number'];
         $sale->payment_method = $input['payment_method'];
+        $sale->payment_condition = $paymentCondition;
         $sale->subtotal = $input['subtotal'];
         $sale->tax = $input['tax'];
         $sale->discount = $input['discount'];
         $sale->total = $input['total'];
+        $sale->amount_paid = $amountPaid;
+        $sale->balance_due = $balanceDue;
+        $sale->payment_status = $paymentStatus;
+        $sale->due_date = $paymentCondition == 'CREDIT' ? $input['due_date'] : null;
         $sale->status = 'COMPLETED';
         $sale->save();
         return $sale;

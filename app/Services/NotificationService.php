@@ -12,7 +12,8 @@ use App\Repositories\MeetingRepository;
 use App\Services\MeetingService;
 use App\Utilities\FG;
 
-class NotificationService {
+class NotificationService
+{
     private MeetingRepository $meetingRepository;
     private CourseRepository $courseRepository;
     private ModuleRepository $moduleRepository;
@@ -21,7 +22,8 @@ class NotificationService {
     private MeetingService $meetingService;
     private Mailer $mailer;
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->meetingRepository = new MeetingRepository();
         $this->courseRepository = new CourseRepository();
         $this->moduleRepository = new ModuleRepository();
@@ -31,7 +33,8 @@ class NotificationService {
         $this->mailer = new Mailer();
     }
 
-    public function notifyMeeting(int $meeting_id, $company) {
+    public function notifyMeeting(int $meeting_id, $company)
+    {
         $meeting = $this->meetingRepository->getMeetingById($meeting_id);
         if (!$meeting) {
             throw new \Exception('No se encuentra la reunión');
@@ -70,7 +73,8 @@ class NotificationService {
         return $sents;
     }
 
-    private function sendEmailToParticipant($participant, $meeting, $course, $module, $company) {
+    private function sendEmailToParticipant($participant, $meeting, $course, $module, $company)
+    {
         $response = FG::responseDefault();
         try {
             $fullname = trim("{$participant->name} {$participant->paternal_surname} {$participant->maternal_surname}");
@@ -105,7 +109,8 @@ class NotificationService {
         return $response;
     }
 
-    private function sendEmailToTeacher($teacher, $meeting, $course, $module, $company) {
+    private function sendEmailToTeacher($teacher, $meeting, $course, $module, $company)
+    {
         $response = FG::responseDefault();
         try {
             $fullname = trim("{$teacher->name} {$teacher->paternal_surname} {$teacher->maternal_surname}");

@@ -32,6 +32,11 @@ class Sale extends Model
         'pdf_80mm',
         'pdf_a5',
         'pdf_a4',
+        'payment_condition',
+        'amount_paid',
+        'balance_due',
+        'payment_status',
+        'due_date'
     ];
 
     public function customer()
