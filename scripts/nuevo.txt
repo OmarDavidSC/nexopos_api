@@ -1,0 +1,86 @@
+ALTER TABLE sales 
+	ADD COLUMN payment_condition ENUM('CASH', 'CREDIT')
+		NOT NULL DEFAULT 'CASH' AFTER payment_method,
+	ADD COLUMN amount_paid DECIMAL(10,2) 
+		NOT NULL DEFAULT 0.00 AFTER total,
+	ADD COLUMN balance_due DECIMAL(10,2)
+		NOT NULL DEFAULT 0.00 AFTER amount_paid,
+	ADD COLUMN payment_status ENUM('PENDING', 'PARTIAL', 'PAID')
+		NOT NULL DEFAULT 'PAID' AFTER balance_due,
+	ADD COLUMN due_date DATE NULL AFTER payment_status;
+	
+	
+	CREATE TABLE sale_payments (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+
+    company_id INT UNSIGNED NOT NULL,
+    branch_id INT UNSIGNED NOT NULL,
+    sale_id BIGINT UNSIGNED NOT NULL,
+    user_id INT UNSIGNED NOT NULL,
+
+    cash_session_id INT UNSIGNED NULL,
+
+    amount DECIMAL(10,2) NOT NULL,
+
+    payment_method ENUM(
+        'CASH',
+        'CARD',
+        'TRANSFER',
+        'YAPE',
+        'PLIN',
+        'OTHER'
+    ) NOT NULL DEFAULT 'CASH',
+
+    reference VARCHAR(100) NULL,
+    payment_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    payment_type ENUM(
+        'INITIAL',
+        'INSTALLMENT',
+        'FINAL'
+    ) NOT NULL DEFAULT 'INSTALLMENT',
+
+    status ENUM(
+        'ACTIVE',
+        'CANCELLED'
+    ) NOT NULL DEFAULT 'ACTIVE',
+
+    observation TEXT NULL,
+
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at DATETIME NULL,
+
+    PRIMARY KEY (id),
+
+    KEY idx_sale_payment_company (company_id),
+    KEY idx_sale_payment_branch (branch_id),
+    KEY idx_sale_payment_sale (sale_id),
+    KEY idx_sale_payment_user (user_id),
+    KEY idx_sale_payment_session (cash_session_id),
+    KEY idx_sale_payment_date (payment_date),
+
+    CONSTRAINT fk_sale_payment_company
+        FOREIGN KEY (company_id)
+        REFERENCES companies(id),
+
+    CONSTRAINT fk_sale_payment_branch
+        FOREIGN KEY (branch_id)
+        REFERENCES branches(id),
+
+    CONSTRAINT fk_sale_payment_sale
+        FOREIGN KEY (sale_id)
+        REFERENCES sales(id),
+
+    CONSTRAINT fk_sale_payment_user
+        FOREIGN KEY (user_id)
+        REFERENCES users(id),
+
+    CONSTRAINT fk_sale_payment_session
+        FOREIGN KEY (cash_session_id)
+        REFERENCES cash_sessions(id)
+
+) ENGINE=InnoDB
+DEFAULT CHARSET=utf8mb4
+COLLATE=utf8mb4_0900_ai_ci;
