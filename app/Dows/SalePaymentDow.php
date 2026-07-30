@@ -18,17 +18,72 @@ class SalePaymentDow
             $sale_id = $request->getAttribute('id');
             $company_id = Application::getItem('company_id');
 
+            $sale = Sale::query()
+                ->where('id', $sale_id)
+                ->where('company_id', $company_id)
+                ->first();
+
+
+            if (!$sale) {
+                $response['success'] = false;
+                $response['message'] = "La venta no existe";
+                return $response;
+            }
+
+            if ($sale->payment_condition !== 'CREDIT') {
+                $response['success'] = false;
+                $response['message'] = "La venta no corresponde a una venta a crédito";
+                return $response;
+            }
+
             $payments = SalePayment::query()
                 ->with(['user', 'branch', 'cashSession'])
                 ->where('company_id', $company_id)
                 ->where('sale_id', $sale_id)
+                ->where('status', 'ACTIVE')
                 ->orderByDesc('payment_date')
                 ->orderByDesc('id')
                 ->get();
 
+            $totalVenta = round((float) $sale->total, 2);
+            $totalPagado = round((float) $payments->sum('amount'), 2);
+            $saldoPendiente = round(max($totalVenta - $totalPagado, 0), 2);
+
+            $paymentStatus = 'PENDING';
+            if ($saldoPendiente <= 0) {
+                $paymentStatus = 'PAID';
+            } else if ($totalPagado > 0) {
+                $paymentStatus = 'PARTIAL';
+            }
+
+            $rsp = [
+                'sale' => [
+                    'id' => $sale->id,
+                    'total' => $totalVenta,
+                    'amount_paid' => $totalPagado,
+                    'balance_due' => $saldoPendiente,
+                    'payment_status' => $paymentStatus,
+                    'payment_condition' => $sale->payment_condition,
+                    'due_date' => $sale->due_date,
+                    'voucher_type' => $sale->voucher_type,
+                    'voucher_series' => $sale->voucher_series,
+                    'voucher_number' => $sale->voucher_number
+                ],
+
+                'summary' => [
+                    'total_sale' => $totalVenta,
+                    'total_paid' => $totalPagado,
+                    'balance_due' => $saldoPendiente,
+                    'payment_count' => $payments->count(),
+                    'payment_status' => $paymentStatus
+                ],
+
+                'payments' => $payments
+            ];
+
             $response['success'] = true;
-            $response['data'] =  $payments;
-            $response['message'] = 'successfully';
+            $response['data'] =  $rsp;
+            $response['message'] = 'Historial de pagos obtenidos correctamente.';
         } catch (\Exception $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
@@ -39,7 +94,7 @@ class SalePaymentDow
     public function store($request)
     {
         $response = FG::responseDefault();
-        DB::beginTransaction();
+        // DB::beginTransaction();
         try {
 
             $input = $request->getParsedBody();
@@ -73,6 +128,12 @@ class SalePaymentDow
                 return $response;
             }
 
+            if ($sale->status === 'CANCELLED') {
+                $response['success'] = false;
+                $response['message'] = "No se puede registrar pagos en una venta anulada";
+                return $response;
+            }
+
             $totalPagado = SalePayment::query()
                 ->where('company_id', $company_id)
                 ->where('sale_id', $sale_id)
@@ -94,8 +155,12 @@ class SalePaymentDow
             }
 
             $nuevoTotalPagado  = round($totalPagado + $amount, 2);
-            $paymentType = $nuevoTotalPagado >= $totalVenta ? 'FINAL' : 'INSTALLMENT';
+            $nuevoSaldoPendiente = round(max($totalVenta - $nuevoTotalPagado, 0), 2);
+            $pagoCompleto = $nuevoSaldoPendiente <= 0;
+            $paymentType = $pagoCompleto ? 'FINAL' : 'INSTALLMENT';
+            $paymentStatus = $pagoCompleto ? 'PAID' : 'PARTIAL';
 
+            DB::beginTransaction();
             $payment = SalePayment::create([
                 'company_id' => $company_id,
                 'branch_id' => $branch_id,
@@ -111,6 +176,8 @@ class SalePaymentDow
                 'observation' => $input['observation'] ?? null
             ]);
             $sale->amount_paid = $nuevoTotalPagado;
+            $sale->balance_due = $nuevoSaldoPendiente;
+            $sale->payment_status = $paymentStatus;
             $sale->save();
             DB::commit();
 

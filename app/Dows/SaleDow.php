@@ -99,10 +99,13 @@ class SaleDow
                     'status' => $item->status,
                     'status_label' => FG::getStatusLabel($item->status),
                     'sunat_status' => $item->sunat_status,
-                    // 'pdf_58mm' =>  $item->pdf_58mm,
-                    // 'pdf_80mm' => $item->pdf_80mm,
-                    // 'pdf_a5' => $item->pdf_a5,
-                    // 'pdf_a4' => $item->pdf_a4
+
+                    'payment_condition' => $item->payment_condition,
+                    'amount_paid' => $item->amount_paid,
+                    'payment_status' => $item->payment_status,
+                    'balance_due' => (float)$item->total - $item->amount_paid,
+                    'due_date' => FG::formatDateTimeHuman($item->due_date),
+                    'due_date_raw' => $item->due_date,
                 ];
             });
 
@@ -149,8 +152,8 @@ class SaleDow
                 throw new \Exception('Debe agregar al menos un producto.');
             }
 
-            $sale = $this->createSale($input,$company_id,$user_id,$branch_id);
-            SaleService::createInitialPayment($sale,$input);
+            $sale = $this->createSale($input, $company_id, $user_id, $branch_id);
+            SaleService::createInitialPayment($sale, $input);
 
             foreach ($details as $detail) {
                 $this->processSaleDetail($sale, $detail, $company_id, $user_id);
@@ -233,7 +236,7 @@ class SaleDow
                 throw new \Exception("La venta no fue encontrada.");
             }
 
-            if (!empty($sale->sunat_document_id)) {
+            if (!empty($sale->sunat_document_id) && strtoupper((string) $sale->sunat_status) !== 'ACEPTADO') {
                 $this->updateSunatStatus($sale);
                 $sale->refresh();
             }
