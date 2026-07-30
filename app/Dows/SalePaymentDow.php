@@ -26,7 +26,6 @@ class SalePaymentDow
                 ->orderByDesc('id')
                 ->get();
 
-
             $response['success'] = true;
             $response['data'] =  $payments;
             $response['message'] = 'successfully';
@@ -101,7 +100,8 @@ class SalePaymentDow
                 'company_id' => $company_id,
                 'branch_id' => $branch_id,
                 'sale_id' => $sale_id,
-                'cash_session_id' => $input['cash_session_id'],
+                'user_id' => $user_id,
+                'cash_session_id' => $input['cash_session_id'] ?? null,
                 'amount' => $amount,
                 'payment_method' => $input['payment_method'] ?? 'CASH',
                 'reference' => $input['reference'] ?? null,
