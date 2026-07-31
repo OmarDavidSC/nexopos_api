@@ -1,11 +1,11 @@
 CREATE TABLE quotations (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    id INT(10) AUTO_INCREMENT PRIMARY KEY,
 
-    company_id BIGINT UNSIGNED NOT NULL,
-    branch_id BIGINT UNSIGNED NOT NULL,
-    customer_id BIGINT UNSIGNED NULL,
-    sale_id BIGINT UNSIGNED NULL,
-    created_by BIGINT UNSIGNED NOT NULL,
+    company_id INT(10) UNSIGNED NOT NULL,
+    branch_id INT(10) UNSIGNED NOT NULL,
+    customer_id INT(10) UNSIGNED NULL,
+    sale_id BIGINT(20) UNSIGNED NULL,
+    created_by INT(10) UNSIGNED NOT NULL,
 
     quotation_series VARCHAR(10) NOT NULL DEFAULT 'COT',
     quotation_number VARCHAR(20) NOT NULL,
@@ -79,43 +79,48 @@ CREATE TABLE quotations (
     INDEX idx_quotations_deleted_at (deleted_at)
 ) ENGINE=InnoDB
 DEFAULT CHARSET=utf8mb4
-COLLATE=utf8mb4_unicode_ci;
+COLLATE=UTF8MB4_UNICODE_CI;
 
-CREATE TABLE quotation_details (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE `quotation_details` (
+    `id` BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
 
-    quotation_id BIGINT UNSIGNED NOT NULL,
-    product_id BIGINT UNSIGNED NOT NULL,
+    `quotation_id` INT(10) NOT NULL,
+    `product_id` INT(10) UNSIGNED NOT NULL,
 
-    quantity DECIMAL(12, 3) NOT NULL DEFAULT 1.000,
-    unit_price DECIMAL(12, 2) NOT NULL DEFAULT 0.00,
+    `quantity` DECIMAL(12,3) NOT NULL DEFAULT '1.000',
+    `unit_price` DECIMAL(12,2) NOT NULL DEFAULT '0.00',
 
-    discount_percentage DECIMAL(5, 2) NOT NULL DEFAULT 0.00,
-    discount DECIMAL(12, 2) NOT NULL DEFAULT 0.00,
+    `discount_percentage` DECIMAL(5,2) NOT NULL DEFAULT '0.00',
+    `discount` DECIMAL(12,2) NOT NULL DEFAULT '0.00',
 
-    subtotal DECIMAL(12, 2) NOT NULL DEFAULT 0.00,
-    tax DECIMAL(12, 2) NOT NULL DEFAULT 0.00,
-    total DECIMAL(12, 2) NOT NULL DEFAULT 0.00,
+    `subtotal` DECIMAL(12,2) NOT NULL DEFAULT '0.00',
+    `tax` DECIMAL(12,2) NOT NULL DEFAULT '0.00',
+    `total` DECIMAL(12,2) NOT NULL DEFAULT '0.00',
 
-    description VARCHAR(500) NULL,
+    `description` VARCHAR(500) NULL DEFAULT NULL COLLATE 'utf8mb4_unicode_ci',
 
-    created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP
-        ON UPDATE CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP NULL,
+    `created_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `deleted_at` TIMESTAMP NULL DEFAULT NULL,
 
-    CONSTRAINT fk_quotation_details_quotation
-        FOREIGN KEY (quotation_id)
-        REFERENCES quotations(id)
+    PRIMARY KEY (`id`) USING BTREE,
+
+    INDEX `idx_quotation_details_quotation` (`quotation_id`) USING BTREE,
+    INDEX `idx_quotation_details_product` (`product_id`) USING BTREE,
+    INDEX `idx_quotation_details_deleted_at` (`deleted_at`) USING BTREE,
+
+    CONSTRAINT `fk_quotation_details_quotation`
+        FOREIGN KEY (`quotation_id`)
+        REFERENCES `quotations` (`id`)
+        ON UPDATE NO ACTION
         ON DELETE CASCADE,
 
-    CONSTRAINT fk_quotation_details_product
-        FOREIGN KEY (product_id)
-        REFERENCES products(id),
+    CONSTRAINT `fk_quotation_details_product`
+        FOREIGN KEY (`product_id`)
+        REFERENCES `products` (`id`)
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION
 
-    INDEX idx_quotation_details_quotation (quotation_id),
-    INDEX idx_quotation_details_product (product_id),
-    INDEX idx_quotation_details_deleted_at (deleted_at)
-) ENGINE=InnoDB
-DEFAULT CHARSET=utf8mb4
-COLLATE=utf8mb4_unicode_ci;
+)
+COLLATE='utf8mb4_unicode_ci'
+ENGINE=InnoDB;
