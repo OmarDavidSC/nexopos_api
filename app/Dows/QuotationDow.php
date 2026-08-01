@@ -50,7 +50,7 @@ class QuotationDow
             $input = $request->getParsedBody();
 
             $company_id = Application::getItem('company_id');
-            $branch_id  = Application::getItem('branch_id ');
+            $branch_id  = Application::getItem('branch_id');
             $user_id = Application::getItem('user_id');
 
             DB::beginTransaction();
