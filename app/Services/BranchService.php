@@ -9,7 +9,7 @@ class BranchService
     public static function canViewAllBranches(): bool
     {
         $role = Application::getItem('role')->name;
-        return in_array($role, ['Administrador']);
+        return in_array($role, ['Administrador', 'Soporte']);
     }
 
     public static function applyBranchScope($query)

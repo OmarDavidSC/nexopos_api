@@ -15,7 +15,7 @@ class QuotationRepository
         $perPage = $filters['per_page'];
 
         $query = Quotation::query()
-            ->with(['customer:id,name', 'branch:id,name', 'creator:id,name'])
+            ->with(['customer:id,name,phone', 'branch:id,name', 'creator:id,name'])
             ->withCount('details')
             ->where('company_id', $company_id)->whereNull('deleted_at');
 
@@ -68,6 +68,7 @@ class QuotationRepository
                 'id' => $item->id,
                 'customer_id' => $item->customer_id,
                 'customer_name' => $item->customer?->name,
+                'customer_phone' => $item->customer?->phone,
                 'branch_name' => $item->branch?->name,
                 'created_by' => $item->creator?->name,
                 'quotation' => trim($item->quotation_series . '-' . $item->quotation_number),
@@ -129,7 +130,7 @@ class QuotationRepository
             return '00000001';
         }
 
-        $lastNumber = (int) $lastQuotation->quotation_series;
+        $lastNumber = (int) $lastQuotation->quotation_number;
         $nextNumber = $lastNumber + 1;
         return str_pad((string) $nextNumber, 8, '0', STR_PAD_LEFT);
     }

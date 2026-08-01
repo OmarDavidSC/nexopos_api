@@ -144,7 +144,7 @@ class QuotationDow
 
             $response['success'] = true;
             $response['data'] = $quotation;
-            $response['message'] = 'Cotización marcadxa como enviada correctamente.!';
+            $response['message'] = 'Cotización marcada como enviada correctamente.!';
         } catch (\Exception $e) {
             DB::rollBack();
             $response['success'] = false;
