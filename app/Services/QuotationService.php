@@ -6,7 +6,6 @@ use App\Models\Quotation;
 use App\Repositories\QuotationDetailRepository;
 use App\Repositories\QuotationRepository;
 use App\Utilities\FG;
-
 class QuotationService
 {
     public static function getPaginateList(int $company_id, array $filters): array
