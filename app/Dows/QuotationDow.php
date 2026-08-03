@@ -4,6 +4,7 @@ namespace App\Dows;
 
 use App\Middlewares\Application;
 use App\Services\QuotationService;
+use App\Services\SaleService;
 use Illuminate\Database\Capsule\Manager as DB;
 use App\Utilities\FG;
 
@@ -164,15 +165,20 @@ class QuotationDow
 
             DB::beginTransaction();
             $result = QuotationService::convertToSale($quotation_id, $input, $company_id, $user_id);
+            $sale = SaleService::emitTosunat($result['sale']);
             DB::commit();
 
             $response['success'] = true;
-            $response['data'] = $result;
-            $response['message'] = 'Cotización convertida en venta correctamente.!';
+            $response['data'] = [
+                'quotation' => $result['quotation'],
+                'sale' => $sale
+            ];
+            $response['message'] = 'Cotización convertida en venta y comprobante enviado a SUNAT correctamente.!';
         } catch (\Exception $e) {
             DB::rollBack();
             $response['success'] = false;
             $response['message'] = $e->getMessage();
+            return $response;
         }
         return $response;
     }

@@ -275,7 +275,7 @@ class QuotationService
         }
 
         if ($quotation->status === 'CONVERTED' || !empty($quotation->sale_id)) {
-            throw new \Exception('La cotizaciób ya fue convertida en venta.');
+            throw new \Exception('La cotización ya fue convertida en venta..');
         }
         if ($quotation->status === 'CANCELLED') {
             throw new \Exception('No se puede convertir una cotización cancelada.');

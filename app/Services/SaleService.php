@@ -180,4 +180,104 @@ class SaleService
             'Salida por venta generada desde cotización'
         );
     }
+
+    public static function emitTosunat(Sale $sale): Sale
+    {
+        $voucherType = strtoupper(trim((string) $sale->voucher_type));
+
+        if (!in_array($voucherType, ['BOLETA', 'FACTURA'], true)) {
+            throw new \Exception('La venta debe generar una BOLETA o FACTURA para enviarse a SUNAT.');
+        }
+
+        $payload = self::buildSunatPayload($sale);
+        $sunatService = new SunatApiService();
+        $sunatResult = $sunatService->emit($payload);
+        $sunatResponse = $sunatResult['response'] ?? [];
+
+        if (!($sunatResponse['success'] ?? false)) {
+            throw new \Exception($sunatResponse['message'] ?? 'No se pudo emitir el comprobante electrónico.');
+        }
+        $sunatData = $sunatResponse['data'] ?? [];
+        if (empty($sunatData['documentId'])) {
+            throw new \Exception('El servicio de SUNAT no devolvió el identificador del documento.');
+        }
+
+        $pdf = $sunatData['pdf'] ?? [];
+        $sale->sunat_document_id = $sunatData['documentId'];
+        $sale->sunat_status = strtoupper(trim((string) ($sunatData['status'] ?? 'PENDIENTE')));
+        $sale->voucher_series = $sunatData['serie'] ?? $sale->voucher_series;
+        $sale->voucher_number = $sunatData['number'] ?? $sale->voucher_number;
+        $sale->pdf_58mm = $pdf['58mm'] ?? $sale->pdf_58mm;
+        $sale->pdf_80mm = $pdf['80mm'] ?? $sale->pdf_80mm;
+        $sale->pdf_a5 = $pdf['A5'] ?? $sale->pdf_a5;
+        $sale->pdf_a4 = $pdf['A4'] ?? $sale->pdf_a4;
+        $sale->save();
+        return $sale->fresh();
+    }
+
+    public static function buildSunatPayload(Sale $sale): array
+    {
+        $sale->loadMissing(['company', 'customer', 'details.product']);
+        $company = $sale->company;
+        $customer = $sale->customer;
+
+        if (!$company) {
+            throw new \Exception('No se encontró la empresa asociada a la venta.');
+        }
+        if (!$customer) {
+            throw new \Exception('No se encontró el cliente asociado a la venta.');
+        }
+        if ($sale->details->isEmpty()) {
+            throw new \Exception('La venta no contiene productos para emitir a SUNAT.');
+        }
+
+        $voucherType = strtoupper(trim((string) $sale->voucher_type));
+        $tipoDocumento = match ($voucherType) {
+            'BOLETA' => '03',
+            'FACTURA' => '01',
+            default => null,
+        };
+
+        if (!$tipoDocumento) {
+            throw new \Exception('El tipo de comprobante seleccionado no se envía a SUNAT.');
+        }
+
+        $customerDocumentType = strtoupper(trim((string) $customer->document_type));
+        $tipoDocumentoCliente = match ($customerDocumentType) {
+            'DNI' => '1',
+            'RUC' => '6',
+            'CE' => '4',
+            'PASSPORT', 'PASAPORTE' => '7',
+            default => '0'
+        };
+
+        if ($tipoDocumento === '01' && $tipoDocumentoCliente !== '6') {
+            throw new \Exception('Para emitir una factura, el cliente debe tener RUC.');
+        }
+        if (empty($customer->document_number)) {
+            throw new \Exception('El cliente no tiene un número de documento registrado.');
+        }
+
+        $items = [];
+        foreach ($sale->details as $detail) {
+            if (!$detail->product) {
+                throw new \Exception("No se encontró el producto del detalle {$detail->id}.");
+            }
+            $items[] = ['descripcion' => $detail->product->name, 'cantidad' => (float) $detail->quantity, 'precio' => (float) $detail->sale_price];
+        }
+
+        return [
+            'empresa' => [
+                'ruc' => $company->ruc,
+                'persona_id' => $company->sunat_persona_id,
+                'persona_token' => $company->sunat_persona_token,
+                'razon_social' => $company->business_name,
+                'nombre_comercial' => $company->name,
+                'direccion' => $company->fiscal_address
+            ],
+            'cliente' => ['tipo_documento' => $tipoDocumentoCliente, 'numero_documento' => $customer->document_number, 'nombre' => $customer->name, 'direccion' => $customer->address ?? '-'],
+            'comprobante' => ['tipo_documento' => $tipoDocumento, 'serie' => $sale->voucher_series, 'moneda' => $company->currency_code ?? 'PEN'],
+            'items' => $items
+        ];
+    }
 }
