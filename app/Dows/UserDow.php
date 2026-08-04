@@ -30,6 +30,7 @@ class UserDow
                 ->leftJoin('roles', 'user_company_role.role_id', '=', 'roles.id')
                 ->leftJoin('branches', 'user_company_role.branch_id', '=', 'branches.id')
                 ->where('user_company_role.company_id', $company_id)
+                ->where('roles.name', '!=', 'Soporte')
                 ->whereNull('users.deleted_at')
                 ->orderBy('users.id', 'desc');
 
@@ -258,6 +259,7 @@ class UserDow
             $company_id = Application::getItem('company_id');
 
             $roles = Role::whereNull('deleted_at')
+                ->where('name', '!=', 'Soporte')
                 ->orderBy('name', 'asc')
                 ->get();
 

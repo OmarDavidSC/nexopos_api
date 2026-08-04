@@ -22,4 +22,9 @@ class ProductStocks extends Model
     {
         return $this->belongsTo(Product::class, 'product_id');
     }
+
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class, 'branch_id');
+    }
 }

@@ -6,4 +6,9 @@ $map->attach('rinventorys.', '/rinventory', function ($map) {
         'Controller' => 'App\Controllers\ReportInventoryController',
         'Action' => 'index'
     ]);
+
+    $map->post('low', '/low', [
+        'Controller' => 'App\Controllers\ReportInventoryController',
+        'Action' => 'low'
+    ]);
 });

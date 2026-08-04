@@ -20,12 +20,18 @@ class Sale extends Model
         'voucher_type',
         'voucher_series',
         'voucher_number',
+        'sunat_document_id',
+        'sunat_status',
         'payment_method',
         'subtotal',
         'tax',
         'discount',
         'total',
         'status',
+        'pdf_58mm',
+        'pdf_80mm',
+        'pdf_a5',
+        'pdf_a4',
     ];
 
     public function customer()
@@ -46,5 +52,10 @@ class Sale extends Model
     public function branch()
     {
         return $this->belongsTo(Branch::class);
+    }
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
     }
 }

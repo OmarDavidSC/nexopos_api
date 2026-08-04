@@ -18,4 +18,9 @@ class ReportInventoryController extends BaseController
     {
         return Response::json($this->dow->index($request));
     }
+
+    public function low($request)
+    {
+        return Response::json($this->dow->low($request));
+    }
 }

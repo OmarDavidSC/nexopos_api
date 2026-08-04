@@ -3,6 +3,7 @@
 namespace App\Dows;
 
 use App\Middlewares\Application;
+use App\Models\ProductStocks;
 use App\Models\Purchase;
 use Illuminate\Database\Capsule\Manager as DB;
 use App\Utilities\FG;
@@ -52,6 +53,83 @@ class ReportInventoryDow
             ];
 
             $response['message'] = 'successfully.';
+        } catch (\Exception $e) {
+            $response['success'] = false;
+            $response['message'] = $e->getMessage();
+        }
+        return $response;
+    }
+
+    public function low($request)
+    {
+        $response = FG::responseDefault();
+        try {
+
+            $input = $request->getParsedBody();
+            $company_id = Application::getItem('company_id');
+
+            $query = ProductStocks::query()
+                ->select([
+                    'product_stocks.id',
+                    'product_stocks.company_id',
+                    'product_stocks.branch_id',
+                    'product_stocks.product_id',
+                    'product_stocks.current_stock',
+                    'product_stocks.minimum_stock',
+                ])->with([
+                    'product:id,name,code,category_id',
+                    'product.category:id,name',
+                    'branch:id,name'
+                ])->where('product_stocks.company_id', $company_id)
+                ->where('product_stocks.minimum_stock', '>', 0)
+                ->whereColumn('product_stocks.current_stock', '<=', 'product_stocks.minimum_stock');
+
+            if (!empty($input['branch_id'])) {
+                $query->where('product_stocks.branch_id', (int) $input['branch_id']);
+            }
+
+            // if (!empty($input['product_id'])) {
+            //     $query->where('product_stocks.product_id', (int) $input['product_id']);
+            // }
+
+            // if (!empty($input['category_id'])) {
+            //     $categoryId = (int) $input['category_id'];
+
+            //     $query->wherHas('product', function ($productQuery) use ($categoryId) {
+            //         $productQuery->where('category_id', $categoryId);
+            //     });
+            // }
+
+            if (!empty($input['status'])) {
+                if ($input['status'] === 'OUT_OF_STOCK') {
+                    $query->where('product_stocks.current_stock', '<=', 0);
+                }
+
+                if ($input['status'] === 'CRITICAL') {
+                    $query->where('product_stocks.current_stock', '>', 0)
+                        ->whereColumn('product_stocks.current_stock', '<=', 'product_stocks.minimum_stock');
+                }
+            }
+
+            if (!empty($input['search'])) {
+                $search = trim($input['search']);
+
+                $query->whereHas('product', function ($productQuery) use ($search) {
+                    $productQuery->where(function ($subQuery) use ($search) {
+                        $subQuery->where('name', 'LIKE', "%{$search}%")
+                            ->orWhere('code', 'LIKE', "%{$search}%");
+                    });
+                });
+            }
+
+            $perPage = !empty($input['per_page']) ? (int)$input['per_page'] : 15;
+            $items = $query->orderBy('product_stocks.current_stock', 'asc')
+                ->get();
+
+
+            $response['success'] = true;
+            $response['data'] = $items;
+            $response['message'] = 'Productos con stock bajo obtenidos correctamente.';
         } catch (\Exception $e) {
             $response['success'] = false;
             $response['message'] = $e->getMessage();
