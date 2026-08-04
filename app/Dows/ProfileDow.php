@@ -89,7 +89,7 @@ class ProfileDow
             $id = $request->getAttribute('id');
 
             $new_password = isset($input['new_password']) ? trim($input['new_password']) : '';
-            $repet_password = isset($input['repet_pasword']) ? trim($input['repet_pasword']) : '';
+            $repet_password = isset($input['repet_password']) ? trim($input['repet_password']) : '';
 
             if (empty($new_password) || empty($repet_password)) {
                 $response['success'] = false;
@@ -135,7 +135,7 @@ class ProfileDow
             $input = $request->getParsedBody();
             $id = $request->getAttribute('id');
 
-            $new_email = isset($input['email']) ? trim($input['email']) : '';
+            $new_email = isset($input['new_email']) ? trim($input['new_email']) : '';
             $password = isset($input['password']) ? $input['password'] : null;
 
             if (empty($new_email)) {
