@@ -23,10 +23,10 @@ class ReportPurchaseDow
                 'summary'            => $this->summary(clone $query),
                 'purchases_by_day'   => $this->purchasesByDay(clone $query),
                 'purchases_by_month' => $this->purchasesByMonth(clone $query),
-                'top_products'       => $this->topProducts(clone $query),
-                'top_suppliers'      => $this->topSuppliers(clone $query),
-                'voucher_types'      => $this->voucherTypes(clone $query),
-                'purchase_status'    => $this->purchaseStatus(clone $query),
+                // 'top_products'       => $this->topProducts(clone $query),
+                // 'top_suppliers'      => $this->topSuppliers(clone $query),
+                // 'voucher_types'      => $this->voucherTypes(clone $query),
+                // 'purchase_status'    => $this->purchaseStatus(clone $query),
                 // 'purchases'          => $this->purchaseList(clone $query)
             ];
 
